@@ -14,24 +14,50 @@ import { PomodoroSession } from './interfaces/pomodoro-session.interface';
 export class PomodoroSessionsController {
   constructor(private readonly pomodoroSessionsService: PomodoroSessionsService) {}
 
+  private formatSessionForResponse(session: any) {
+    if (!session) return null;
+    const start = session.startTime ? new Date(session.startTime) : null;
+    const end = session.endTime ? new Date(session.endTime) : null;
+    return {
+      ...session,
+      startTime: session.startTime,
+      endTime: session.endTime,
+      startTimePtBr: start
+        ? start.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        : null,
+      endTimePtBr: end
+        ? end.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        : null,
+    };
+  }
+
   @Post()
   @HttpCode(201)
   create(@Body() body: Omit<PomodoroSession, 'id' | 'status'>) {
-    return this.pomodoroSessionsService.create(body);
+    const session = this.pomodoroSessionsService.create(body);
+    return this.formatSessionForResponse(session);
   }
 
   @Get()
   findAll(@Query('userId') userId: string) {
     if (userId) {
-      return this.pomodoroSessionsService.findByUserId(userId);
+      const sessions = this.pomodoroSessionsService.findByUserId(userId);
+      return sessions.map(s => this.formatSessionForResponse(s));
     }
-    return this.pomodoroSessionsService.findAll();
+    const sessions = this.pomodoroSessionsService.findAll();
+    return sessions.map(s => this.formatSessionForResponse(s));
   }
 
   @Get('active')
   findActive(@Query('userId') userId: string) {
     // userId agora é opcional — se não fornecido, retorna a primeira sessão ativa global
-    return this.pomodoroSessionsService.findActiveSession(userId);
+    const session = this.pomodoroSessionsService.findActiveSession(userId);
+    return this.formatSessionForResponse(session);
+  }
+
+  @Get('active/remaining')
+  getActiveRemaining(@Query('userId') userId: string) {
+    return this.pomodoroSessionsService.getRemainingTime(undefined, userId);
   }
 
   @Get('stats')
@@ -42,16 +68,24 @@ export class PomodoroSessionsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.pomodoroSessionsService.findOne(id);
+    const session = this.pomodoroSessionsService.findOne(id);
+    return this.formatSessionForResponse(session);
+  }
+
+  @Get(':id/remaining')
+  getRemaining(@Param('id') id: string) {
+    return this.pomodoroSessionsService.getRemainingTime(id);
   }
 
   @Post(':id/complete')
   complete(@Param('id') id: string) {
-    return this.pomodoroSessionsService.completeSession(id);
+    const session = this.pomodoroSessionsService.completeSession(id);
+    return this.formatSessionForResponse(session);
   }
 
   @Post(':id/cancel')
   cancel(@Param('id') id: string) {
-    return this.pomodoroSessionsService.cancelSession(id);
+    const session = this.pomodoroSessionsService.cancelSession(id);
+    return this.formatSessionForResponse(session);
   }
 }

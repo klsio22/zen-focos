@@ -6,14 +6,61 @@ export class PomodoroSessionsService {
   private sessions: PomodoroSession[] = [];
 
   create(session: Omit<PomodoroSession, 'id' | 'status'>) {
+    // Aceita tanto `duration` quanto `durationMinutes` no payload
+    const payloadAny = session as any;
+    const durationMinutes = payloadAny.duration ?? payloadAny.durationMinutes ?? 25;
+    const startTime = new Date();
+    const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
     const newSession = {
       ...session,
       id: this.generateId(),
       status: 'running' as const,
-      startTime: new Date(),
+      // padroniza internamente como `duration` (minutos)
+      duration: durationMinutes,
+      // manter também durationMinutes para compatibilidade com clientes
+      durationMinutes: durationMinutes,
+      startTime,
+      endTime,
     };
     this.sessions.push(newSession);
     return newSession;
+  }
+
+  /**
+   * Retorna o tempo restante em milissegundos e informações legíveis.
+   * Se `id` for fornecido, usa a sessão correspondente; caso contrário, usa a sessão ativa (opcionalmente por userId).
+   */
+  getRemainingTime(id?: string, userId?: string) {
+    let session: PomodoroSession | undefined;
+    if (id) {
+      session = this.sessions.find(s => s.id === id);
+    } else {
+      session = this.findActiveSession(userId);
+    }
+
+    if (!session) throw new NotFoundException('Sessão não encontrada');
+
+    // Se não houver endTime, estimamos com base em startTime + duration
+    session.endTime ??= new Date(new Date(session.startTime).getTime() + (session.duration || 25) * 60000);
+
+    const now = new Date();
+    const remainingMs = session.status === 'running' ? session.endTime.getTime() - now.getTime() : 0;
+    const remaining = Math.max(0, remainingMs);
+
+    return {
+      sessionId: session.id,
+      status: session.status,
+      estimatedEndTime: session.endTime,
+      estimatedEndTimePtBr: session.endTime
+        ? new Date(session.endTime).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        : null,
+      startTimePtBr: session.startTime
+        ? new Date(session.startTime).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        : null,
+      remainingMs: remaining,
+      remainingSeconds: Math.ceil(remaining / 1000),
+      remainingMinutes: Math.ceil(remaining / 60000),
+    };
   }
 
   findAll() {
