@@ -5,7 +5,7 @@
 @baseUrl = http://localhost:3000
 
 # Variáveis de exemplo - substitua pelos valores reais retornados pela API
-@taskId = fjo3sc6admgmft3zi2u
+@taskId = gu0x1diexnsmft8504b
 @sessionId = 05oywio0xgimft5pqwi
 @breakId = dfz6nuee01mft5nr51
 @jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example-placeholder
