@@ -1,0 +1,140 @@
+
+### ZenFocos API - Requests de teste
+
+# Base URL
+@baseUrl = http://localhost:3000
+
+# Variáveis de exemplo - substitua pelos valores reais retornados pela API
+@taskId = fjo3sc6admgmft3zi2u
+@sessionId = 05oywio0xgimft5pqwi
+@breakId = dfz6nuee01mft5nr51
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example-placeholder
+
+### Tasks (Tarefas)
+
+### Criar tarefa
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+	"title": "Estudar para a prova",
+	"description": "Ler os capítulos 3 e 4",
+	"estimatedPomodoros": 3
+}
+
+### Listar todas as tarefas
+GET {{baseUrl}}/tasks
+
+### Buscar tarefa por id
+GET {{baseUrl}}/tasks/{{taskId}}
+
+### Atualizar tarefa completa (PUT)
+PUT {{baseUrl}}/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+	"title": "Estudar para a prova - atualizado",
+	"description": "Ler os capítulos 3, 4 e 5",
+	"estimatedPomodoros": 4,
+	"status": "in-progress"
+}
+
+### Atualizar tarefa parcial (PATCH)
+PATCH {{baseUrl}}/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+	"description": "Apenas revisar capítulo 5"
+}
+
+### Completar pomodoro de uma tarefa
+PATCH {{baseUrl}}/tasks/{{taskId}}/complete-pomodoro
+
+### Excluir tarefa
+DELETE {{baseUrl}}/tasks/{{taskId}}
+
+
+### Pomodoro Sessions (Sessões Pomodoro)
+
+### Iniciar nova sessão pomodoro
+POST {{baseUrl}}/pomodoro-sessions
+Content-Type: application/json
+
+{
+	"taskId": "{{taskId}}",
+    "durationMinutes": 5
+}
+
+### Listar todas as sessões
+GET {{baseUrl}}/pomodoro-sessions
+
+### Buscar sessão ativa
+GET {{baseUrl}}/pomodoro-sessions/active
+
+### Tempo restante da sessão ativa
+GET {{baseUrl}}/pomodoro-sessions/active/remaining
+
+### Buscar sessão por id
+GET {{baseUrl}}/pomodoro-sessions/{{sessionId}}
+
+### Completar sessão
+POST {{baseUrl}}/pomodoro-sessions/{{sessionId}}/complete
+
+### Cancelar sessão
+POST {{baseUrl}}/pomodoro-sessions/{{sessionId}}/cancel
+
+### Avançar para pausa (completa sessão e inicia break automaticamente)
+POST {{baseUrl}}/pomodoro-sessions/{{sessionId}}/advance
+
+
+### Pomodoro Breaks (created automatically on session completion)
+
+### Listar pausas
+GET {{baseUrl}}/pomodoro-breaks
+
+
+### Criar pausa manualmente (opcional)
+POST {{baseUrl}}/pomodoro-breaks
+Content-Type: application/json
+
+{
+  "sessionId": "{{sessionId}}",
+  "duration": 5,
+  "type": "short"
+}
+
+### Buscar pausa por id
+GET {{baseUrl}}/pomodoro-breaks/{{breakId}}
+
+### Iniciar pausa
+POST {{baseUrl}}/pomodoro-breaks/{{breakId}}/start
+
+### Completar pausa
+POST {{baseUrl}}/pomodoro-breaks/{{breakId}}/complete
+
+### Excluir pausa
+DELETE {{baseUrl}}/pomodoro-breaks/{{breakId}}
+### Auth & Users (placeholders)
+
+### Login (obter token de exemplo)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+	"email": "user@example.com",
+	"password": "senha123"
+}
+
+### Criar usuário
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+	"email": "user@example.com",
+	"password": "senha123",
+	"name": "Usuário Exemplo"
+}
+
+### Exemplo protegido - listar tarefas com token
+GET {{baseUrl}}/tasks
+Authorization: Bearer {{jwtToken}}
