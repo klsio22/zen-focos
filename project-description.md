@@ -121,7 +121,6 @@ Endpoints principais (local mode):
 - `POST /pomodoro-sessions/:id/cancel` - Cancel session
 - `POST /pomodoro-sessions/:id/advance` - Complete session and start break
 - `GET /pomodoro-breaks` - List all breaks
-- `GET /pomodoro-breaks/active` - Get active break
 - `POST /pomodoro-breaks` - Create break manually
 - `GET /pomodoro-breaks/:id` - Get break by id
 - `POST /pomodoro-breaks/:id/start` - Start a break
