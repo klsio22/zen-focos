@@ -5,7 +5,7 @@
 @baseUrl = http://localhost:3000
 
 # Variáveis de exemplo - substitua pelos valores reais retornados pela API
-@taskId = 268sdt4ota1hmfsykatx
+@taskId = fjo3sc6admgmft3zi2u
 @sessionId = a8btrr1kqp4mft3j8qy
 @jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example-placeholder
 
@@ -107,19 +107,3 @@ Content-Type: application/json
 ### Exemplo protegido - listar tarefas com token
 GET {{baseUrl}}/tasks
 Authorization: Bearer {{jwtToken}}
-
-### Exemplo de resposta (sessão) com horários em pt-BR
-### Response
-HTTP/1.1 200 OK
-Content-Type: application/json
-
-{
-	"taskId": "268sdt4ota1hmfsykatx",
-	"durationMinutes": 5,
-	"id": "j5hrg51gtb9mft2kdjh",
-	"status": "running",
-	"startTime": "2025-09-21T02:19:34.157Z",
-	"endTime": "2025-09-21T02:24:34.157Z",
-	"startTimePtBr": "20/09/2025 23:19:34",
-	"endTimePtBr": "20/09/2025 23:24:34"
-}

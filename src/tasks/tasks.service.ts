@@ -21,8 +21,9 @@ export class TasksService {
     return this.tasks;
   }
 
-  findByUserId(userId: string) {
-    return this.tasks.filter(task => task.userId === userId);
+  // User-less local mode: tasks are global in the in-memory store
+  findByUserId(_userId: string) {
+    return this.tasks;
   }
 
   findOne(id: string) {

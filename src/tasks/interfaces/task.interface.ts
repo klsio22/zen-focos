@@ -5,7 +5,6 @@ export interface Task {
   status: 'pending' | 'in_progress' | 'completed';
   estimatedPomodoros: number;
   completedPomodoros: number;
-  userId: string;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Param,
-  Body,
-  HttpCode,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, HttpCode } from '@nestjs/common';
 import { PomodoroSessionsService } from './pomodoro-sessions.service';
 import { PomodoroSession } from './interfaces/pomodoro-session.interface';
 
@@ -39,31 +31,25 @@ export class PomodoroSessionsController {
   }
 
   @Get()
-  findAll(@Query('userId') userId: string) {
-    if (userId) {
-      const sessions = this.pomodoroSessionsService.findByUserId(userId);
-      return sessions.map(s => this.formatSessionForResponse(s));
-    }
+  findAll() {
     const sessions = this.pomodoroSessionsService.findAll();
     return sessions.map(s => this.formatSessionForResponse(s));
   }
 
   @Get('active')
-  findActive(@Query('userId') userId: string) {
-    // userId is optional — if not provided, returns the first active session globally
-    const session = this.pomodoroSessionsService.findActiveSession(userId);
+  findActive() {
+    const session = this.pomodoroSessionsService.findActiveSession();
     return this.formatSessionForResponse(session);
   }
 
   @Get('active/remaining')
-  getActiveRemaining(@Query('userId') userId: string) {
-    return this.pomodoroSessionsService.getRemainingTime(undefined, userId);
+  getActiveRemaining() {
+    return this.pomodoroSessionsService.getRemainingTime();
   }
 
   @Get('stats')
-  getStats(@Query('userId') userId: string) {
-    // userId agora é opcional — se não fornecido, retorna estatísticas globais
-    return this.pomodoroSessionsService.getSessionStats(userId);
+  getStats() {
+    return this.pomodoroSessionsService.getSessionStats();
   }
 
   @Get(':id')

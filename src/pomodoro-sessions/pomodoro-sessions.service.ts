@@ -27,14 +27,14 @@ export class PomodoroSessionsService {
 
   /**
    * Returns remaining time in milliseconds and human-friendly information.
-   * If `id` is provided, uses the matching session; otherwise uses the active session (optionally by userId).
+   * If `id` is provided, uses the matching session; otherwise uses the active session.
    */
-  getRemainingTime(id?: string, userId?: string) {
+  getRemainingTime(id?: string) {
     let session: PomodoroSession | undefined;
     if (id) {
       session = this.sessions.find((s) => s.id === id);
     } else {
-      session = this.findActiveSession(userId);
+      session = this.findActiveSession();
     }
 
     if (!session) throw new NotFoundException("Session not found");
@@ -75,18 +75,13 @@ export class PomodoroSessionsService {
     return this.sessions;
   }
 
-  findByUserId(userId?: string) {
-    if (!userId) return this.sessions;
-    return this.sessions.filter((session) => session.userId === userId);
+  // User-less local mode: sessions are global in the in-memory store
+  findByUserId(_userId?: string) {
+    return this.sessions;
   }
 
-  findActiveSession(userId?: string) {
-    if (!userId) {
-      return this.sessions.find((session) => session.status === "running");
-    }
-    return this.sessions.find(
-      (session) => session.userId === userId && session.status === "running",
-    );
+  findActiveSession() {
+    return this.sessions.find((session) => session.status === "running");
   }
 
   findOne(id: string) {
@@ -127,8 +122,8 @@ export class PomodoroSessionsService {
     this.sessions.splice(index, 1);
   }
 
-  getSessionStats(userId?: string) {
-    const userSessions = this.findByUserId(userId);
+  getSessionStats() {
+    const userSessions = this.findByUserId();
     const completedSessions = userSessions.filter(
       (s) => s.status === "completed",
     );

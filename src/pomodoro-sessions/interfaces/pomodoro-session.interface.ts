@@ -1,7 +1,6 @@
 export interface PomodoroSession {
   id: string;
   taskId: string;
-  userId: string;
   duration: number;
   durationMinutes?: number;
   startTime: Date;

@@ -1,15 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Patch,
-  Delete,
-  Param,
-  Body,
-  HttpCode,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Param, Body, HttpCode } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { Task } from './interfaces/task.interface';
 
@@ -24,10 +13,7 @@ export class TasksController {
   }
 
   @Get()
-  findAll(@Query('userId') userId: string) {
-    if (userId) {
-      return this.tasksService.findByUserId(userId);
-    }
+  findAll() {
     return this.tasksService.findAll();
   }
 

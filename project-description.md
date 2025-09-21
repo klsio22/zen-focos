@@ -69,14 +69,7 @@ erDiagram
     TASK ||--o{ POMODORO_SESSION : has
     POMODORO_SESSION ||--o{ POMODORO_BREAK : contains
 
-    USER {
-        string id
-        string email
-        string password
-        string name
-        datetime created_at
-        datetime updated_at
-    }
+    %% This project can run in local mode without users; user entity omitted for local setups
     
     TASK {
         string id
