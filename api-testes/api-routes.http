@@ -92,8 +92,6 @@ POST {{baseUrl}}/pomodoro-sessions/{{sessionId}}/advance
 ### Listar pausas
 GET {{baseUrl}}/pomodoro-breaks
 
-### Buscar pausa ativa
-GET {{baseUrl}}/pomodoro-breaks/active
 
 ### Criar pausa manualmente (opcional)
 POST {{baseUrl}}/pomodoro-breaks

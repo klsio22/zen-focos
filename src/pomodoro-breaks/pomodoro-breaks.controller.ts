@@ -16,14 +16,14 @@ export class PomodoroBreaksController {
     return this.breaksService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.breaksService.findOne(id);
-  }
-
   @Get('active')
   findActive() {
     return this.breaksService.findActiveBreak();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.breaksService.findOne(id);
   }
 
   @Post(':id/start')
