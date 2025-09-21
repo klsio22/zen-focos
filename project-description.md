@@ -64,13 +64,11 @@ npm run start:prod
 
 ```mermaid
 erDiagram
-    USER ||--o{ TASK : creates
-    USER ||--o{ POMODORO_SESSION : completes
     TASK ||--o{ POMODORO_SESSION : has
     POMODORO_SESSION ||--o{ POMODORO_BREAK : contains
 
-    %% This project can run in local mode without users; user entity omitted for local setups
-    
+    %% Local mode: no users. Entities simplified for local/in-memory usage.
+
     TASK {
         string id
         string title
@@ -78,21 +76,19 @@ erDiagram
         string status
         integer estimated_pomodoros
         integer completed_pomodoros
-        string user_id
         datetime created_at
         datetime updated_at
     }
-    
+
     POMODORO_SESSION {
         string id
         string task_id
-        string user_id
         integer duration
         datetime start_time
         datetime end_time
         string status
     }
-    
+
     POMODORO_BREAK {
         string id
         string session_id
@@ -107,12 +103,22 @@ erDiagram
 
 **Swagger UI:** `https://zenfocos-api.example.com/api/docs`
 
-Endpoints principais:
-- `POST /api/v1/auth/login` - Autenticação
-- `GET /api/v1/tasks` - Listar tasks
-- `POST /api/v1/tasks` - Criar task
-- `POST /api/v1/pomodoro/start` - Iniciar pomodoro
-- `POST /api/v1/pomodoro/complete` - Completar pomodoro
+Endpoints principais (local mode):
+- `GET /tasks` - List all tasks
+- `POST /tasks` - Create a task
+- `GET /tasks/:id` - Get task by id
+- `PUT /tasks/:id` - Replace task
+- `PATCH /tasks/:id` - Update task fields
+- `PATCH /tasks/:id/complete-pomodoro` - Increment completed pomodoros for a task
+- `DELETE /tasks/:id` - Delete a task
+- `POST /pomodoro-sessions` - Start a pomodoro session
+- `GET /pomodoro-sessions` - List sessions
+- `GET /pomodoro-sessions/active` - Get active session
+- `GET /pomodoro-sessions/active/remaining` - Remaining time for active session
+- `GET /pomodoro-sessions/:id` - Get session by id
+- `GET /pomodoro-sessions/:id/remaining` - Remaining time for a session
+- `POST /pomodoro-sessions/:id/complete` - Mark session complete
+- `POST /pomodoro-sessions/:id/cancel` - Cancel session
 
 ## ✅ Checklist de Funcionalidades
 
@@ -184,18 +190,18 @@ sequenceDiagram
     Database-->>API: Task criada
     API-->>Usuário: Task criada (201)
 
-    Usuário->>API: POST /pomodoro/start (iniciar)
-    API->>Database: Criar sessão
-    Database-->>API: Sessão criada
-    API-->>Usuário: Sessão iniciada (200)
+    Usuário->>API: POST /pomodoro-sessions (start session)
+    API->>Database: Create session
+    Database-->>API: Session created
+    API-->>Usuário: Session started (200)
 
     loop Timer 25 minutos
         API->>API: Contagem regressiva
     end
 
-    API->>Usuário: Notificação término
-    Usuário->>API: POST /pomodoro/complete
-    API->>Database: Atualizar sessão e task
+    API->>Usuário: End notification
+    Usuário->>API: POST /pomodoro-sessions/:id/complete
+    API->>Database: Update session and task
     Database-->>API: Dados atualizados
     API-->>Usuário: Pomodoro completado (200)
 ```
