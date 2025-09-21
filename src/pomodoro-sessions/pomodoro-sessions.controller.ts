@@ -50,7 +50,7 @@ export class PomodoroSessionsController {
 
   @Get('active')
   findActive(@Query('userId') userId: string) {
-    // userId agora é opcional — se não fornecido, retorna a primeira sessão ativa global
+    // userId is optional — if not provided, returns the first active session globally
     const session = this.pomodoroSessionsService.findActiveSession(userId);
     return this.formatSessionForResponse(session);
   }

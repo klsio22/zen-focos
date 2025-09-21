@@ -27,7 +27,7 @@ export class TasksService {
 
   findOne(id: string) {
     const task = this.tasks.find(task => task.id === id);
-    if (!task) throw new NotFoundException('Task não encontrada');
+    if (!task) throw new NotFoundException('Task not found');
     return task;
   }
 
@@ -45,7 +45,7 @@ export class TasksService {
 
   remove(id: string) {
     const index = this.tasks.findIndex(task => task.id === id);
-    if (index === -1) throw new NotFoundException('Task não encontrada');
+    if (index === -1) throw new NotFoundException('Task not found');
     this.tasks.splice(index, 1);
   }
 
