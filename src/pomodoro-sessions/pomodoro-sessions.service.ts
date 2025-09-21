@@ -20,11 +20,15 @@ export class PomodoroSessionsService {
     return this.sessions;
   }
 
-  findByUserId(userId: string) {
+  findByUserId(userId?: string) {
+    if (!userId) return this.sessions;
     return this.sessions.filter(session => session.userId === userId);
   }
 
-  findActiveSession(userId: string) {
+  findActiveSession(userId?: string) {
+    if (!userId) {
+      return this.sessions.find(session => session.status === 'running');
+    }
     return this.sessions.find(
       session => session.userId === userId && session.status === 'running',
     );
@@ -66,13 +70,13 @@ export class PomodoroSessionsService {
     this.sessions.splice(index, 1);
   }
 
-  getSessionStats(userId: string) {
+  getSessionStats(userId?: string) {
     const userSessions = this.findByUserId(userId);
     const completedSessions = userSessions.filter(s => s.status === 'completed');
     
     return {
       totalSessions: completedSessions.length,
-      totalFocusTime: completedSessions.reduce((total, session) => total + session.duration, 0),
+  totalFocusTime: completedSessions.reduce((total, session) => total + session.duration, 0),
       averageSessionLength: completedSessions.length > 0 
         ? completedSessions.reduce((total, session) => total + session.duration, 0) / completedSessions.length 
         : 0,

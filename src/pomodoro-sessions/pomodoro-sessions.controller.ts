@@ -30,17 +30,13 @@ export class PomodoroSessionsController {
 
   @Get('active')
   findActive(@Query('userId') userId: string) {
-    if (!userId) {
-      throw new Error('UserId é obrigatório');
-    }
+    // userId agora é opcional — se não fornecido, retorna a primeira sessão ativa global
     return this.pomodoroSessionsService.findActiveSession(userId);
   }
 
   @Get('stats')
   getStats(@Query('userId') userId: string) {
-    if (!userId) {
-      throw new Error('UserId é obrigatório');
-    }
+    // userId agora é opcional — se não fornecido, retorna estatísticas globais
     return this.pomodoroSessionsService.getSessionStats(userId);
   }
 
