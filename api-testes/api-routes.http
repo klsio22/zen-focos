@@ -6,7 +6,8 @@
 
 # Variáveis de exemplo - substitua pelos valores reais retornados pela API
 @taskId = fjo3sc6admgmft3zi2u
-@sessionId = a8btrr1kqp4mft3j8qy
+@sessionId = 05oywio0xgimft5pqwi
+@breakId = dfz6nuee01mft5nr51
 @jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example-placeholder
 
 ### Tasks (Tarefas)
@@ -82,7 +83,39 @@ POST {{baseUrl}}/pomodoro-sessions/{{sessionId}}/complete
 ### Cancelar sessão
 POST {{baseUrl}}/pomodoro-sessions/{{sessionId}}/cancel
 
+### Avançar para pausa (completa sessão e inicia break automaticamente)
+POST {{baseUrl}}/pomodoro-sessions/{{sessionId}}/advance
 
+
+### Pomodoro Breaks (created automatically on session completion)
+
+### Listar pausas
+GET {{baseUrl}}/pomodoro-breaks
+
+### Buscar pausa ativa
+GET {{baseUrl}}/pomodoro-breaks/active
+
+### Criar pausa manualmente (opcional)
+POST {{baseUrl}}/pomodoro-breaks
+Content-Type: application/json
+
+{
+  "sessionId": "{{sessionId}}",
+  "duration": 5,
+  "type": "short"
+}
+
+### Buscar pausa por id
+GET {{baseUrl}}/pomodoro-breaks/{{breakId}}
+
+### Iniciar pausa
+POST {{baseUrl}}/pomodoro-breaks/{{breakId}}/start
+
+### Completar pausa
+POST {{baseUrl}}/pomodoro-breaks/{{breakId}}/complete
+
+### Excluir pausa
+DELETE {{baseUrl}}/pomodoro-breaks/{{breakId}}
 ### Auth & Users (placeholders)
 
 ### Login (obter token de exemplo)

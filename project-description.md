@@ -119,6 +119,14 @@ Endpoints principais (local mode):
 - `GET /pomodoro-sessions/:id/remaining` - Remaining time for a session
 - `POST /pomodoro-sessions/:id/complete` - Mark session complete
 - `POST /pomodoro-sessions/:id/cancel` - Cancel session
+- `POST /pomodoro-sessions/:id/advance` - Complete session and start break
+- `GET /pomodoro-breaks` - List all breaks
+- `GET /pomodoro-breaks/active` - Get active break
+- `POST /pomodoro-breaks` - Create break manually
+- `GET /pomodoro-breaks/:id` - Get break by id
+- `POST /pomodoro-breaks/:id/start` - Start a break
+- `POST /pomodoro-breaks/:id/complete` - Complete a break
+- `DELETE /pomodoro-breaks/:id` - Delete a break
 
 ## ✅ Checklist de Funcionalidades
 
@@ -158,15 +166,14 @@ Endpoints principais (local mode):
 
 ### 1. Gestão de Tasks
 ```typescript
-// Exemplo de estrutura de task
+// Example task structure (local mode - no userId)
 {
   id: "uuid",
-  title: "Implementar feature X",
-  description: "Descrição detalhada da task",
+  title: "Implement feature X",
+  description: "Detailed description of the task",
   status: "pending" | "in_progress" | "completed",
   estimatedPomodoros: 3,
   completedPomodoros: 0,
-  userId: "user-uuid",
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z"
 }

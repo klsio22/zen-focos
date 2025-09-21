@@ -1,9 +1,16 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PomodoroSession } from "./interfaces/pomodoro-session.interface";
+import { TasksService } from "../tasks/tasks.service";
+import { PomodoroBreaksService } from "../pomodoro-breaks/pomodoro-breaks.service";
 
 @Injectable()
 export class PomodoroSessionsService {
-  private sessions: PomodoroSession[] = [];
+  private readonly sessions: PomodoroSession[] = [];
+
+  constructor(
+    private readonly tasksService: TasksService,
+    private readonly breaksService: PomodoroBreaksService,
+  ) {}
 
   create(session: Omit<PomodoroSession, "id" | "status">) {
     // Aceita tanto `duration` quanto `durationMinutes` no payload
@@ -101,6 +108,28 @@ export class PomodoroSessionsService {
     };
     const index = this.sessions.findIndex((s) => s.id === id);
     this.sessions[index] = updatedSession;
+    
+    // Increment task completed pomodoros if task exists
+    try {
+      const updatedTask = this.tasksService.incrementCompletedPomodoros(
+        session.taskId,
+      );
+
+      // Decide break type: long after every 4 completed pomodoros
+      const isLongBreak = updatedTask.completedPomodoros > 0 && updatedTask.completedPomodoros % 4 === 0;
+      const breakDuration = isLongBreak ? 15 : 5;
+
+      // Create a break scheduled to start now
+      this.breaksService.create({
+        sessionId: session.id,
+        duration: breakDuration,
+        type: isLongBreak ? 'long' : 'short',
+        startTime: new Date(),
+      });
+    } catch (err) {
+      console.warn('Failed to create break after session completion:', err);
+    }
+
     return updatedSession;
   }
 
@@ -114,6 +143,21 @@ export class PomodoroSessionsService {
     const index = this.sessions.findIndex((s) => s.id === id);
     this.sessions[index] = updatedSession;
     return updatedSession;
+  }
+
+  advanceToBreak(id: string) {
+    const session = this.completeSession(id);
+    
+    // Find the break that was just created for this session
+    const createdBreak = this.breaksService.findAll().find(b => b.sessionId === session.id && b.status === 'scheduled');
+    
+    if (createdBreak) {
+      // Start the break immediately
+      const startedBreak = this.breaksService.startBreak(createdBreak.id);
+      return { session, break: startedBreak };
+    }
+    
+    return { session, break: null };
   }
 
   remove(id: string) {

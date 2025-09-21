@@ -74,4 +74,13 @@ export class PomodoroSessionsController {
     const session = this.pomodoroSessionsService.cancelSession(id);
     return this.formatSessionForResponse(session);
   }
+
+  @Post(':id/advance')
+  advance(@Param('id') id: string) {
+    const result = this.pomodoroSessionsService.advanceToBreak(id);
+    return {
+      session: this.formatSessionForResponse(result.session),
+      break: result.break
+    };
+  }
 }
