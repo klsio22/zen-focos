@@ -6,6 +6,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   constructor() {
     super({
       log: ['query', 'info', 'warn', 'error'],
+      adapter: {
+        provider: 'mysql',
+        url: process.env.DATABASE_URL,
+      },
     });
   }
 
