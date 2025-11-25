@@ -1,45 +1,86 @@
-import { Controller, Get, Post, Put, Patch, Delete, Param, Body, HttpCode } from '@nestjs/common';
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Put, 
+  Delete, 
+  Body, 
+  Param, 
+  UseGuards, 
+  ParseIntPipe,
+  Request 
+} from '@nestjs/common';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiBearerAuth,
+  ApiParam 
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TasksService } from './tasks.service';
-import { Task } from './interfaces/task.interface';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
-@Controller('tasks')
+@ApiTags('tasks')
+@ApiBearerAuth()
+@Controller({
+  path: 'tasks',
+  version: '1',
+})
+@UseGuards(JwtAuthGuard)
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
-  @Post()
-  @HttpCode(201)
-  create(@Body() body: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) {
-    return this.tasksService.create(body as Task);
+  @Get()
+  @ApiOperation({ summary: 'Get all tasks for authenticated user' })
+  @ApiResponse({ status: 200, description: 'List of tasks retrieved successfully' })
+  findAll(@Request() req) {
+    return this.tasksService.findAllByUser(req.user.id);
   }
 
-  @Get()
-  findAll() {
-    return this.tasksService.findAll();
+  @Get('grouped')
+  @ApiOperation({ summary: 'Get tasks grouped by status' })
+  @ApiResponse({ status: 200, description: 'Tasks grouped by status retrieved successfully' })
+  findGrouped(@Request() req) {
+    return this.tasksService.getTasksGroupedByStatus(req.user.id);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.tasksService.findOne(id);
+  @ApiOperation({ summary: 'Get a specific task by ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'Task ID' })
+  @ApiResponse({ status: 200, description: 'Task retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
+  findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.tasksService.findOne(id, req.user.id);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new task' })
+  @ApiResponse({ status: 201, description: 'Task created successfully' })
+  create(@Body() createTaskDto: CreateTaskDto, @Request() req) {
+    return this.tasksService.create(createTaskDto, req.user.id);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() body: Partial<Task>) {
-    return this.tasksService.update(id, body);
-  }
-
-  @Patch(':id')
-  partialUpdate(@Param('id') id: string, @Body() body: Partial<Task>) {
-    return this.tasksService.update(id, body);
-  }
-
-  @Patch(':id/complete-pomodoro')
-  completePomodoro(@Param('id') id: string) {
-    return this.tasksService.incrementCompletedPomodoros(id);
+  @ApiOperation({ summary: 'Update a task' })
+  @ApiParam({ name: 'id', type: Number, description: 'Task ID' })
+  @ApiResponse({ status: 200, description: 'Task updated successfully' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateTaskDto: UpdateTaskDto,
+    @Request() req,
+  ) {
+    return this.tasksService.update(id, updateTaskDto, req.user.id);
   }
 
   @Delete(':id')
-  @HttpCode(204)
-  remove(@Param('id') id: string) {
-    this.tasksService.remove(id);
+  @ApiOperation({ summary: 'Delete a task' })
+  @ApiParam({ name: 'id', type: Number, description: 'Task ID' })
+  @ApiResponse({ status: 200, description: 'Task deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
+  remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.tasksService.remove(id, req.user.id);
   }
 }
