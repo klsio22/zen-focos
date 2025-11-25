@@ -17,4 +17,3 @@ import { PomodoroSessionsModule } from './pomodoro-sessions/pomodoro-sessions.mo
   ],
 })
 export class AppModule {}
-

@@ -5,7 +5,11 @@ import { PomodoroBreak } from './interfaces/pomodoro-break.interface';
 export class PomodoroBreaksService {
   private readonly breaks: PomodoroBreak[] = [];
 
-  create(b: Omit<PomodoroBreak, 'id' | 'status' | 'startTime' | 'endTime'> & { startTime?: Date }) {
+  create(
+    b: Omit<PomodoroBreak, 'id' | 'status' | 'startTime' | 'endTime'> & {
+      startTime?: Date;
+    },
+  ) {
     const start = b.startTime ?? new Date();
     const end = new Date(start.getTime() + (b.duration || 5) * 60000);
     const nb: PomodoroBreak = {
@@ -24,33 +28,41 @@ export class PomodoroBreaksService {
   }
 
   findOne(id: string) {
-    const br = this.breaks.find(b => b.id === id);
+    const br = this.breaks.find((b) => b.id === id);
     if (!br) throw new NotFoundException('Break not found');
     return br;
   }
 
   startBreak(id: string) {
     const br = this.findOne(id);
-    const updated = { ...br, status: 'running' as const, startTime: new Date() };
-    const idx = this.breaks.findIndex(b => b.id === id);
+    const updated = {
+      ...br,
+      status: 'running' as const,
+      startTime: new Date(),
+    };
+    const idx = this.breaks.findIndex((b) => b.id === id);
     this.breaks[idx] = updated;
     return updated;
   }
 
   completeBreak(id: string) {
     const br = this.findOne(id);
-    const updated = { ...br, status: 'completed' as const, endTime: new Date() };
-    const idx = this.breaks.findIndex(b => b.id === id);
+    const updated = {
+      ...br,
+      status: 'completed' as const,
+      endTime: new Date(),
+    };
+    const idx = this.breaks.findIndex((b) => b.id === id);
     this.breaks[idx] = updated;
     return updated;
   }
 
   findActiveBreak() {
-    return this.breaks.find(b => b.status === 'running');
+    return this.breaks.find((b) => b.status === 'running');
   }
 
   remove(id: string) {
-    const idx = this.breaks.findIndex(b => b.id === id);
+    const idx = this.breaks.findIndex((b) => b.id === id);
     if (idx === -1) throw new NotFoundException('Break not found');
     this.breaks.splice(idx, 1);
   }

@@ -1,21 +1,21 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Body, 
-  Param, 
-  UseGuards, 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
   ParseIntPipe,
-  Request 
+  Request,
 } from '@nestjs/common';
-import { 
-  ApiTags, 
-  ApiOperation, 
-  ApiResponse, 
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
   ApiBearerAuth,
-  ApiParam 
+  ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TasksService } from './tasks.service';
@@ -34,14 +34,20 @@ export class TasksController {
 
   @Get()
   @ApiOperation({ summary: 'Get all tasks for authenticated user' })
-  @ApiResponse({ status: 200, description: 'List of tasks retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of tasks retrieved successfully',
+  })
   findAll(@Request() req) {
     return this.tasksService.findAllByUser(req.user.id);
   }
 
   @Get('grouped')
   @ApiOperation({ summary: 'Get tasks grouped by status' })
-  @ApiResponse({ status: 200, description: 'Tasks grouped by status retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Tasks grouped by status retrieved successfully',
+  })
   findGrouped(@Request() req) {
     return this.tasksService.getTasksGroupedByStatus(req.user.id);
   }

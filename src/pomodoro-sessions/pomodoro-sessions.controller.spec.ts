@@ -9,7 +9,9 @@ describe('PomodoroSessionsController', () => {
       controllers: [PomodoroSessionsController],
     }).compile();
 
-    controller = module.get<PomodoroSessionsController>(PomodoroSessionsController);
+    controller = module.get<PomodoroSessionsController>(
+      PomodoroSessionsController,
+    );
   });
 
   it('should be defined', () => {

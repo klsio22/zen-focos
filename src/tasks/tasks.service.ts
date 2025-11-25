@@ -93,6 +93,10 @@ export class TasksService {
       where: { id: taskId },
     });
 
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
     let status: TaskStatus;
     if (task.completedPomodoros >= task.estimatedPomodoros) {
       status = TaskStatus.COMPLETED;
@@ -110,19 +114,22 @@ export class TasksService {
 
   async getTasksGroupedByStatus(userId: number) {
     const tasks = await this.findAllByUser(userId);
-    
+
     return {
-      pending: tasks.filter(task => 
-        task.status === TaskStatus.PENDING && 
-        task.completedPomodoros < task.estimatedPomodoros
+      pending: tasks.filter(
+        (task) =>
+          task.status === TaskStatus.PENDING &&
+          task.completedPomodoros < task.estimatedPomodoros,
       ),
-      inProgress: tasks.filter(task => 
-        task.status === TaskStatus.IN_PROGRESS && 
-        task.completedPomodoros < task.estimatedPomodoros
+      inProgress: tasks.filter(
+        (task) =>
+          task.status === TaskStatus.IN_PROGRESS &&
+          task.completedPomodoros < task.estimatedPomodoros,
       ),
-      completed: tasks.filter(task => 
-        task.status === TaskStatus.COMPLETED || 
-        task.completedPomodoros >= task.estimatedPomodoros
+      completed: tasks.filter(
+        (task) =>
+          task.status === TaskStatus.COMPLETED ||
+          task.completedPomodoros >= task.estimatedPomodoros,
       ),
     };
   }
