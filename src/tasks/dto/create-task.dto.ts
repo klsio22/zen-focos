@@ -7,7 +7,6 @@ import {
   Min,
   MaxLength,
 } from 'class-validator';
-import { TaskStatus } from '@prisma/generated';
 
 export class CreateTaskDto {
   @ApiProperty({
@@ -28,13 +27,13 @@ export class CreateTaskDto {
   description?: string;
 
   @ApiPropertyOptional({
-    enum: TaskStatus,
+    enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED'],
     description: 'Task status',
-    example: TaskStatus.PENDING,
+    example: 'PENDING',
   })
-  @IsEnum(TaskStatus)
+  @IsEnum(['PENDING', 'IN_PROGRESS', 'COMPLETED'])
   @IsOptional()
-  status?: TaskStatus;
+  status?: string;
 
   @ApiProperty({ description: 'Estimated pomodoros', minimum: 1, example: 3 })
   @IsInt()

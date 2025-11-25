@@ -7,7 +7,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from '../tasks/tasks.service';
 import { PauseSessionDto } from './dto/pause-session.dto';
 import { ResumeSessionDto } from './dto/resume-session.dto';
-import { SessionStatus } from '@prisma/generated';
 
 @Injectable()
 export class PomodoroSessionsService {
@@ -30,7 +29,7 @@ export class PomodoroSessionsService {
         taskId,
         duration: 25, // Fixed 25 minutes
         startTime: new Date(),
-        status: SessionStatus.ACTIVE,
+        status: 'ACTIVE',
         isPaused: false,
         remainingSeconds: null,
       },
@@ -47,7 +46,7 @@ export class PomodoroSessionsService {
   ) {
     const session = await this.findSession(sessionId, userId);
 
-    if (session.status !== SessionStatus.ACTIVE) {
+    if (session.status !== 'ACTIVE') {
       throw new BadRequestException('Session is not active');
     }
 
@@ -82,7 +81,7 @@ export class PomodoroSessionsService {
       where: { id: sessionId },
       data: {
         isPaused: false,
-        status: SessionStatus.ACTIVE,
+        status: 'ACTIVE',
         startTime: new Date(),
         remainingSeconds: resumeDto.remainingSeconds,
       },
@@ -98,7 +97,7 @@ export class PomodoroSessionsService {
     const updatedSession = await this.prisma.pomodoroSession.update({
       where: { id: sessionId },
       data: {
-        status: SessionStatus.COMPLETED,
+        status: 'COMPLETED',
         endTime: new Date(),
         isPaused: false,
         remainingSeconds: null,
@@ -118,12 +117,12 @@ export class PomodoroSessionsService {
   }
 
   async cancelSession(sessionId: number, userId: number) {
-    const session = await this.findSession(sessionId, userId);
+    await this.findSession(sessionId, userId);
 
     return this.prisma.pomodoroSession.update({
       where: { id: sessionId },
       data: {
-        status: SessionStatus.CANCELLED,
+        status: 'CANCELLED',
         endTime: new Date(),
         isPaused: false,
         remainingSeconds: null,
@@ -138,7 +137,7 @@ export class PomodoroSessionsService {
     const sessions = await this.prisma.pomodoroSession.findMany({
       where: {
         userId,
-        status: SessionStatus.ACTIVE,
+        status: 'ACTIVE',
       },
       include: {
         task: true,
@@ -166,17 +165,17 @@ export class PomodoroSessionsService {
   }
 
   private isActive(session: any): boolean {
-    return session.status === SessionStatus.ACTIVE && !session.isPaused;
+    return session.status === 'ACTIVE' && !session.isPaused;
   }
 
   private async cancelActiveSessions(userId: number) {
     await this.prisma.pomodoroSession.updateMany({
       where: {
         userId,
-        status: SessionStatus.ACTIVE,
+        status: 'ACTIVE',
       },
       data: {
-        status: SessionStatus.CANCELLED,
+        status: 'CANCELLED',
         endTime: new Date(),
         isPaused: false,
         remainingSeconds: null,

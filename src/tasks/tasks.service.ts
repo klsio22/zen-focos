@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { TaskStatus } from '@prisma/generated';
 
 @Injectable()
 export class TasksService {
@@ -46,7 +45,7 @@ export class TasksService {
     };
 
     const task = await this.prisma.task.create({
-      data: taskData,
+      data: taskData as any,
     });
 
     // Auto-update status based on progress
@@ -58,7 +57,7 @@ export class TasksService {
 
     await this.prisma.task.update({
       where: { id },
-      data: updateTaskDto,
+      data: updateTaskDto as any,
     });
 
     // Auto-update status based on progress
@@ -97,18 +96,18 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
-    let status: TaskStatus;
+    let status: string;
     if (task.completedPomodoros >= task.estimatedPomodoros) {
-      status = TaskStatus.COMPLETED;
+      status = 'COMPLETED';
     } else if (task.completedPomodoros > 0) {
-      status = TaskStatus.IN_PROGRESS;
+      status = 'IN_PROGRESS';
     } else {
-      status = TaskStatus.PENDING;
+      status = 'PENDING';
     }
 
     return this.prisma.task.update({
       where: { id: taskId },
-      data: { status },
+      data: { status } as any,
     });
   }
 
@@ -118,17 +117,17 @@ export class TasksService {
     return {
       pending: tasks.filter(
         (task) =>
-          task.status === TaskStatus.PENDING &&
+          task.status === 'PENDING' &&
           task.completedPomodoros < task.estimatedPomodoros,
       ),
       inProgress: tasks.filter(
         (task) =>
-          task.status === TaskStatus.IN_PROGRESS &&
+          task.status === 'IN_PROGRESS' &&
           task.completedPomodoros < task.estimatedPomodoros,
       ),
       completed: tasks.filter(
         (task) =>
-          task.status === TaskStatus.COMPLETED ||
+          task.status === 'COMPLETED' ||
           task.completedPomodoros >= task.estimatedPomodoros,
       ),
     };
