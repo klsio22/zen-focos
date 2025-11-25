@@ -81,10 +81,67 @@ npm run start:prod
 ## 📚 Documentação Swagger
 Swagger UI: `https://zenfocos-api.example.com/api/docs` (substituir pela URL real em produção)
 
+## ⚙️ Run locally (passo-a-passo)
+
+Siga estes passos para rodar a API localmente usando Docker + MySQL e Prisma:
+
+1. Instale dependências:
+
+```bash
+npm install
+```
+
+2. Copie variáveis de ambiente e ajuste (edite se necessário):
+
+```bash
+cp .env.example .env
+# editar .env conforme necessário (DATABASE_URL, JWT_SECRET)
+```
+
+3. Suba o MySQL via Docker Compose:
+
+```bash
+npm run docker:up
+# ou: docker compose up -d
+```
+
+4. (Opcional) Se o container MySQL estiver restrito a `localhost`, crie um usuário com acesso remoto dentro do container:
+
+```bash
+docker exec -it prisma_mysql mysql -uroot -proot -e "CREATE USER IF NOT EXISTS 'zenfocos'@'%' IDENTIFIED BY 'zenfocos123'; GRANT ALL PRIVILEGES ON zenfocos_db.* TO 'zenfocos'@'%'; FLUSH PRIVILEGES;"
+```
+
+5. Gerar o Prisma Client e aplicar migrations:
+
+```bash
+npx prisma generate
+npx prisma migrate dev --name init
+```
+
+6. Inicie a aplicação (desenvolvimento):
+
+```bash
+npm run start:dev
+```
+
+7. Acesse a API e a documentação:
+
+- API: `http://localhost:3000`
+- Swagger: `http://localhost:3000/api/docs`
+
+Observações:
+- Este projeto atualmente usa o Prisma Client gerado em `./generated/prisma` (gerado com Prisma v4). O `package.json` foi alinhado para usar `prisma@4.16.2` e `@prisma/client@4.16.2` para evitar incompatibilidades.
+- Para limpar dados locais do MySQL, pare o compose e remova volumes:
+
+```bash
+docker compose down -v
+```
+
+
 ## ✅ Checklist de Funcionalidades (RA / ID)
 
-RA1 - Projetar e desenvolver uma API funcional utilizando o framework NestJS.
-- [ ] **ID1**: O aluno configurou corretamente o ambiente de desenvolvimento e criou a API utilizando NestJS, com rotas e controladores que seguem a arquitetura modular.
+RA1 - Projetar e desenvolver uma API funcional utlizando o framework NestJS.
+- [x] **ID1**: O aluno configurou corretamente o ambiente de desenvolvimento e criou a API utilizando NestJS, com rotas e controladores que seguem a arquitetura modular.
 - [ ] **ID2**: O aluno aplicou boas práticas de organização da lógica de negócios, garantindo que os services contenham a lógica de negócio e sejam chamados pelos controladores, separando responsabilidades corretamente.
 - [ ] **ID3**: O aluno utilizou providers e configurou adequadamente a injeção de dependência no NestJS, garantindo uma arquitetura modular e escalável.
 - [ ] **ID4**: O aluno demonstrou a habilidade de criar e manipular rotas HTTP, manipulando parâmetros de rota, query e body, lidando corretamente com requisições e respostas.
