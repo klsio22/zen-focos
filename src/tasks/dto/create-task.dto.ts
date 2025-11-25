@@ -7,7 +7,7 @@ import {
   Min,
   MaxLength,
 } from 'class-validator';
-import { TaskStatus } from '@prisma/client';
+import { TaskStatus } from '@prisma/generated';
 
 export class CreateTaskDto {
   @ApiProperty({

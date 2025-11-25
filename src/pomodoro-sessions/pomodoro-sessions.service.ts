@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from '../tasks/tasks.service';
 import { PauseSessionDto } from './dto/pause-session.dto';
 import { ResumeSessionDto } from './dto/resume-session.dto';
-import { SessionStatus } from '@prisma/client';
+import { SessionStatus } from '@prisma/generated';
 
 @Injectable()
 export class PomodoroSessionsService {
