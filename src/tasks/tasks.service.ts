@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
+type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+
 @Injectable()
 export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
@@ -38,14 +40,15 @@ export class TasksService {
   }
 
   async create(createTaskDto: CreateTaskDto, userId: number) {
-    const taskData = {
-      ...createTaskDto,
-      userId,
-      completedPomodoros: createTaskDto.completedPomodoros || 0,
-    };
-
     const task = await this.prisma.task.create({
-      data: taskData as any,
+      data: {
+        userId,
+        title: createTaskDto.title,
+        description: createTaskDto.description,
+        estimatedPomodoros: createTaskDto.estimatedPomodoros,
+        completedPomodoros: createTaskDto.completedPomodoros || 0,
+        status: 'PENDING',
+      },
     });
 
     // Auto-update status based on progress
@@ -55,9 +58,36 @@ export class TasksService {
   async update(id: number, updateTaskDto: UpdateTaskDto, userId: number) {
     await this.findOne(id, userId); // Verify ownership
 
+    const data: {
+      title?: string;
+      description?: string | null;
+      estimatedPomodoros?: number;
+      completedPomodoros?: number;
+      status?: TaskStatus;
+    } = {};
+
+    if (updateTaskDto.title !== undefined) {
+      data.title = updateTaskDto.title;
+    }
+    if (updateTaskDto.description !== undefined) {
+      data.description = updateTaskDto.description;
+    }
+    if (updateTaskDto.estimatedPomodoros !== undefined) {
+      data.estimatedPomodoros = updateTaskDto.estimatedPomodoros;
+    }
+    if (updateTaskDto.completedPomodoros !== undefined) {
+      data.completedPomodoros = updateTaskDto.completedPomodoros;
+    }
+    if (
+      updateTaskDto.status !== undefined &&
+      ['PENDING', 'IN_PROGRESS', 'COMPLETED'].includes(updateTaskDto.status)
+    ) {
+      data.status = updateTaskDto.status as TaskStatus;
+    }
+
     await this.prisma.task.update({
       where: { id },
-      data: updateTaskDto as any,
+      data,
     });
 
     // Auto-update status based on progress
@@ -96,7 +126,7 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
-    let status: string;
+    let status: TaskStatus;
     if (task.completedPomodoros >= task.estimatedPomodoros) {
       status = 'COMPLETED';
     } else if (task.completedPomodoros > 0) {
@@ -107,7 +137,7 @@ export class TasksService {
 
     return this.prisma.task.update({
       where: { id: taskId },
-      data: { status } as any,
+      data: { status },
     });
   }
 

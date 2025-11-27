@@ -164,7 +164,7 @@ export class PomodoroSessionsService {
     return session;
   }
 
-  private isActive(session: any): boolean {
+  private isActive(session: { status: string; isPaused: boolean }): boolean {
     return session.status === 'ACTIVE' && !session.isPaused;
   }
 

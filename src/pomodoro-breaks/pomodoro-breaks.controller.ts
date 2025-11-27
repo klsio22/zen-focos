@@ -8,6 +8,7 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { PomodoroBreaksService } from './pomodoro-breaks.service';
+import { CreatePomodoroBreakDto } from './dto/create-pomodoro-break.dto';
 
 @Controller('pomodoro-breaks')
 export class PomodoroBreaksController {
@@ -15,7 +16,7 @@ export class PomodoroBreaksController {
 
   @Post()
   @HttpCode(201)
-  create(@Body() body: any) {
+  create(@Body() body: CreatePomodoroBreakDto) {
     return this.breaksService.create(body);
   }
 
