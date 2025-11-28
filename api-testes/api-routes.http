@@ -20,9 +20,9 @@ POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "email": "teste@example.com",
-  "password": "senha123",
-  "name": "Usuário Teste"
+  "email": "usuario@zenfocos.com",
+  "password": "senha123456",
+  "name": "Usuário ZenFocos"
 }
 
 ### 2. Login (obter token JWT)
@@ -31,8 +31,8 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "teste@example.com",
-  "password": "senha123"
+  "email": "usuario@zenfocos.com",
+  "password": "senha123456"
 }
 
 ###############################################################################
@@ -128,8 +128,8 @@ POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "email": "fluxo@example.com",
-  "password": "senha123",
+  "email": "fluxo@zenfocos.com",
+  "password": "senha123456",
   "name": "Teste Fluxo"
 }
 
@@ -138,8 +138,8 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "fluxo@example.com",
-  "password": "senha123"
+  "email": "fluxo@zenfocos.com",
+  "password": "senha123456"
 }
 
 ### PASSO 3: Criar tarefa (copie o id da resposta)
@@ -182,7 +182,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "teste@example.com",
+  "email": "usuario@zenfocos.com",
   "password": "senhaErrada"
 }
 
