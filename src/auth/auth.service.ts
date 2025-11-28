@@ -9,6 +9,11 @@ import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
+interface JwtPayload {
+  email: string;
+  sub: number;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -17,7 +22,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { email, password, name } = registerDto;
+    const { email, password: pwd, name } = registerDto;
 
     // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
@@ -29,7 +34,7 @@ export class AuthService {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(pwd, 12);
 
     // Create user
     const user = await this.prisma.user.create({
@@ -40,19 +45,24 @@ export class AuthService {
       },
     });
 
-    const { password: _, ...result } = user;
-    return result;
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 
   async login(loginDto: LoginDto) {
-    const { email, password } = loginDto;
+    const { email, password: pwd } = loginDto;
 
     // Find user
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user || !(await bcrypt.compare(pwd, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -60,15 +70,19 @@ export class AuthService {
     const payload = { email: user.email, sub: user.id };
     const token = this.jwtService.sign(payload);
 
-    const { password: _, ...userWithoutPassword } = user;
-
     return {
       access_token: token,
-      user: userWithoutPassword,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
     };
   }
 
-  async validateUser(payload: any) {
+  async validateUser(payload: JwtPayload) {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });
@@ -77,7 +91,12 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const { password: _, ...result } = user;
-    return result;
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 }

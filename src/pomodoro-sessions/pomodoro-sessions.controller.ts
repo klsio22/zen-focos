@@ -20,6 +20,10 @@ import { PauseSessionDto } from './dto/pause-session.dto';
 import { ResumeSessionDto } from './dto/resume-session.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+interface AuthenticatedRequest extends Request {
+  user: { id: number; email: string; name?: string };
+}
+
 @ApiTags('pomodoro')
 @ApiBearerAuth()
 @Controller({
@@ -39,7 +43,7 @@ export class PomodoroSessionsController {
   })
   async startSession(
     @Param('taskId', ParseIntPipe) taskId: number,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.pomodoroService.startSession(taskId, req.user.id);
   }
@@ -55,7 +59,7 @@ export class PomodoroSessionsController {
   async pauseSession(
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Body() pauseDto: PauseSessionDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.pomodoroService.pauseSession(sessionId, pauseDto, req.user.id);
   }
@@ -68,7 +72,7 @@ export class PomodoroSessionsController {
   async resumeSession(
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Body() resumeDto: ResumeSessionDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.pomodoroService.resumeSession(
       sessionId,
@@ -83,7 +87,7 @@ export class PomodoroSessionsController {
   @ApiResponse({ status: 200, description: 'Session completed successfully' })
   async completeSession(
     @Param('sessionId', ParseIntPipe) sessionId: number,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.pomodoroService.completeSession(sessionId, req.user.id);
   }
@@ -94,7 +98,7 @@ export class PomodoroSessionsController {
   @ApiResponse({ status: 200, description: 'Session cancelled successfully' })
   async cancelSession(
     @Param('sessionId', ParseIntPipe) sessionId: number,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.pomodoroService.cancelSession(sessionId, req.user.id);
   }
@@ -105,7 +109,7 @@ export class PomodoroSessionsController {
     status: 200,
     description: 'Active session retrieved successfully',
   })
-  async getActiveSession(@Request() req) {
+  async getActiveSession(@Request() req: AuthenticatedRequest) {
     return this.pomodoroService.getActiveSession(req.user.id);
   }
 }
