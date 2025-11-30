@@ -358,15 +358,15 @@ Cancelar sessão pomodoro
 
 **Response:** `200 OK`
 
-#### GET `/v1/pomodoro/active-session`
-Buscar sessão ativa ou pausada do usuário
+#### GET `/v1/pomodoro/sessions`
+List all pomodoro sessions for the authenticated user (newest first).
 
-**Response:** `200 OK` ou `404 Not Found`
+**Response:** `200 OK`
 ```json
-{
-  "active": { ... },
-  "paused": null
-}
+[
+  { /* session object with task relation */ },
+  { /* older session */ }
+]
 ```
 
 ## ✨ O que foi implementado

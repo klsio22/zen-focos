@@ -103,13 +103,13 @@ export class PomodoroSessionsController {
     return this.pomodoroService.cancelSession(sessionId, req.user.id);
   }
 
-  @Get('active-session')
-  @ApiOperation({ summary: 'Get active Pomodoro session for user' })
+  @Get('sessions')
+  @ApiOperation({ summary: 'Get all Pomodoro sessions for user' })
   @ApiResponse({
     status: 200,
-    description: 'Active session retrieved successfully',
+    description: 'List of pomodoro sessions retrieved successfully',
   })
-  async getActiveSession(@Request() req: AuthenticatedRequest) {
-    return this.pomodoroService.getActiveSession(req.user.id);
+  async getSessions(@Request() req: AuthenticatedRequest) {
+    return this.pomodoroService.getSessions(req.user.id);
   }
 }

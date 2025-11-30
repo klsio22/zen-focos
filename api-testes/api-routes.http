@@ -89,8 +89,8 @@ POST {{baseUrl}}/v1/pomodoro/tasks/{{taskId}}/start-session
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
-### 10. Buscar sessão ativa do usuário
-GET {{baseUrl}}/v1/pomodoro/active-session
+### 10. List all pomodoro sessions for the user
+GET {{baseUrl}}/v1/pomodoro/sessions
 Authorization: Bearer {{accessToken}}
 
 ### 11. Pausar sessão ativa
@@ -157,8 +157,8 @@ Content-Type: application/json
 POST {{baseUrl}}/v1/pomodoro/tasks/ID_DA_TASK/start-session
 Authorization: Bearer SEU_TOKEN_AQUI
 
-### PASSO 5: Verificar sessão ativa
-GET {{baseUrl}}/v1/pomodoro/active-session
+### PASSO 5: List all sessions for the user
+GET {{baseUrl}}/v1/pomodoro/sessions
 Authorization: Bearer SEU_TOKEN_AQUI
 
 ### PASSO 6: Completar sessão (use sessionId da resposta anterior)

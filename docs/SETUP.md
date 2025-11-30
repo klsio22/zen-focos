@@ -119,7 +119,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 - `POST /v1/pomodoro/sessions/:sessionId/resume` - Retomar sessão
 - `POST /v1/pomodoro/sessions/:sessionId/complete` - Completar sessão
 - `POST /v1/pomodoro/sessions/:sessionId/cancel` - Cancelar sessão
-- `GET /v1/pomodoro/active-session` - Buscar sessão ativa
+- `GET /v1/pomodoro/sessions` - List all pomodoro sessions for the user
 
 ## 🗄️ Scripts Prisma
 

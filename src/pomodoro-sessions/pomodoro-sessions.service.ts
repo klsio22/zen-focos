@@ -143,22 +143,15 @@ export class PomodoroSessionsService {
     });
   }
 
-  async getActiveSession(userId: number) {
+  async getSessions(userId: number) {
+    // Return all sessions for the user, newest first
     const sessions = await this.prisma.pomodoroSession.findMany({
-      where: {
-        userId,
-        status: 'ACTIVE',
-      },
-      include: {
-        task: true,
-      },
+      where: { userId },
+      include: { task: true },
       orderBy: { createdAt: 'desc' },
     });
 
-    const active = sessions.find((session) => this.isActive(session)) ?? null;
-    const paused = sessions.filter((session) => session.isPaused);
-
-    return { active, paused };
+    return sessions;
   }
 
   private async findSession(sessionId: number, userId: number) {
@@ -176,20 +169,5 @@ export class PomodoroSessionsService {
 
   private isActive(session: { status: string; isPaused: boolean }): boolean {
     return session.status === 'ACTIVE' && !session.isPaused;
-  }
-
-  private async cancelActiveSessions(userId: number) {
-    await this.prisma.pomodoroSession.updateMany({
-      where: {
-        userId,
-        status: 'ACTIVE',
-      },
-      data: {
-        status: 'CANCELLED',
-        endTime: new Date(),
-        isPaused: false,
-        remainingSeconds: null,
-      },
-    });
   }
 }
