@@ -36,7 +36,9 @@ interface AuthenticatedRequest extends Request {
 })
 @UseGuards(JwtAuthGuard)
 export class PomodoroSessionsController {
-  constructor(private readonly pomodoroService: PomodoroSessionsService) {}
+  constructor(
+    private readonly pomodoroSessionsService: PomodoroSessionsService,
+  ) {}
 
   @Post('tasks/:taskId/start-session')
   @ApiOperation({ summary: 'Start a new Pomodoro session for a task' })
@@ -49,7 +51,7 @@ export class PomodoroSessionsController {
     @Param('taskId', ParseIntPipe) taskId: number,
     @Request() req: AuthenticatedRequest,
   ) {
-    return this.pomodoroService.startSession(taskId, req.user.id);
+    return this.pomodoroSessionsService.startSession(taskId, req.user.id);
   }
 
   @Post('sessions/:sessionId/pause')
@@ -64,7 +66,7 @@ export class PomodoroSessionsController {
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Request() req: AuthenticatedRequest,
   ) {
-    return this.pomodoroService.pauseSession(sessionId, req.user.id);
+    return this.pomodoroSessionsService.pauseSession(sessionId, req.user.id);
   }
 
   @Post('sessions/:sessionId/resume')
@@ -76,7 +78,7 @@ export class PomodoroSessionsController {
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Request() req: AuthenticatedRequest,
   ) {
-    return this.pomodoroService.resumeSession(sessionId, req.user.id);
+    return this.pomodoroSessionsService.resumeSession(sessionId, req.user.id);
   }
 
   @Post('sessions/:sessionId/complete')
@@ -87,7 +89,7 @@ export class PomodoroSessionsController {
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Request() req: AuthenticatedRequest,
   ) {
-    return this.pomodoroService.completeSession(sessionId, req.user.id);
+    return this.pomodoroSessionsService.completeSession(sessionId, req.user.id);
   }
 
   @Post('sessions/:sessionId/cancel')
@@ -98,7 +100,7 @@ export class PomodoroSessionsController {
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Request() req: AuthenticatedRequest,
   ) {
-    return this.pomodoroService.cancelSession(sessionId, req.user.id);
+    return this.pomodoroSessionsService.cancelSession(sessionId, req.user.id);
   }
 
   @Get('sessions')
@@ -108,6 +110,6 @@ export class PomodoroSessionsController {
     description: 'List of pomodoro sessions retrieved successfully',
   })
   async getSessions(@Request() req: AuthenticatedRequest) {
-    return this.pomodoroService.getSessions(req.user.id);
+    return this.pomodoroSessionsService.getSessions(req.user.id);
   }
 }
