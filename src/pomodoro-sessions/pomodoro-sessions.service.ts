@@ -196,7 +196,8 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
     }
 
     const startTime = new Date();
-    const remaining = resumeDto.remainingSeconds ?? session.remainingSeconds ?? 0;
+    const remaining =
+      resumeDto.remainingSeconds ?? session.remainingSeconds ?? 0;
     const endTime = new Date(startTime.getTime() + remaining * 1000);
 
     return this.prisma.pomodoroSession.update({
