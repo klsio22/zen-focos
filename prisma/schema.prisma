@@ -1,0 +1,72 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasks      Task[]
+  sessions   PomodoroSession[]
+
+  @@map("users")
+}
+
+model Task {
+  id                  Int               @id @default(autoincrement())
+  userId              Int
+  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title               String
+  description         String?           @db.Text
+  status              TaskStatus         @default(PENDING)
+  estimatedPomodoros  Int               @default(1)
+  completedPomodoros  Int               @default(0)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  sessions            PomodoroSession[]
+
+  @@map("tasks")
+}
+
+model PomodoroSession {
+  id                Int             @id @default(autoincrement())
+  userId            Int
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId            Int
+  task              Task            @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  duration          Int             @default(25)
+  startTime         DateTime
+  endTime           DateTime?
+  pausedAt          DateTime?
+  status            SessionStatus   @default(ACTIVE)
+  isPaused          Boolean         @default(false)
+  remainingSeconds  Int?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("pomodoro_sessions")
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}

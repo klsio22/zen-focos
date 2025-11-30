@@ -1,140 +1,205 @@
 
 ### ZenFocos API - Requests de teste
+### Documentação completa: http://localhost:3000/api/docs
 
 # Base URL
 @baseUrl = http://localhost:3000
 
-# Variáveis de exemplo - substitua pelos valores reais retornados pela API
-@taskId = gu0x1diexnsmft8504b
-@sessionId = 05oywio0xgimft5pqwi
-@breakId = dfz6nuee01mft5nr51
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example-placeholder
+# Variáveis - serão preenchidas após executar os requests
+@accessToken = your-jwt-token-here
+@userId = 1
+@taskId = 1
+@sessionId = 1
 
-### Tasks (Tarefas)
+###############################################################################
+### 🔐 AUTENTICAÇÃO (Sem versão)
+###############################################################################
 
-### Criar tarefa
-POST {{baseUrl}}/tasks
+### 1. Registrar novo usuário
+POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-	"title": "Estudar para a prova",
-	"description": "Ler os capítulos 3 e 4",
-	"estimatedPomodoros": 3
+  "email": "usuario@zenfocos.com",
+  "password": "senha123456",
+  "name": "Usuário ZenFocos"
 }
 
-### Listar todas as tarefas
-GET {{baseUrl}}/tasks
-
-### Buscar tarefa por id
-GET {{baseUrl}}/tasks/{{taskId}}
-
-### Atualizar tarefa completa (PUT)
-PUT {{baseUrl}}/tasks/{{taskId}}
-Content-Type: application/json
-
-{
-	"title": "Estudar para a prova - atualizado",
-	"description": "Ler os capítulos 3, 4 e 5",
-	"estimatedPomodoros": 4,
-	"status": "in-progress"
-}
-
-### Atualizar tarefa parcial (PATCH)
-PATCH {{baseUrl}}/tasks/{{taskId}}
-Content-Type: application/json
-
-{
-	"description": "Apenas revisar capítulo 5"
-}
-
-### Completar pomodoro de uma tarefa
-PATCH {{baseUrl}}/tasks/{{taskId}}/complete-pomodoro
-
-### Excluir tarefa
-DELETE {{baseUrl}}/tasks/{{taskId}}
-
-
-### Pomodoro Sessions (Sessões Pomodoro)
-
-### Iniciar nova sessão pomodoro
-POST {{baseUrl}}/pomodoro-sessions
-Content-Type: application/json
-
-{
-	"taskId": "{{taskId}}",
-    "durationMinutes": 5
-}
-
-### Listar todas as sessões
-GET {{baseUrl}}/pomodoro-sessions
-
-### Buscar sessão ativa
-GET {{baseUrl}}/pomodoro-sessions/active
-
-### Tempo restante da sessão ativa
-GET {{baseUrl}}/pomodoro-sessions/active/remaining
-
-### Buscar sessão por id
-GET {{baseUrl}}/pomodoro-sessions/{{sessionId}}
-
-### Completar sessão
-POST {{baseUrl}}/pomodoro-sessions/{{sessionId}}/complete
-
-### Cancelar sessão
-POST {{baseUrl}}/pomodoro-sessions/{{sessionId}}/cancel
-
-### Avançar para pausa (completa sessão e inicia break automaticamente)
-POST {{baseUrl}}/pomodoro-sessions/{{sessionId}}/advance
-
-
-### Pomodoro Breaks (created automatically on session completion)
-
-### Listar pausas
-GET {{baseUrl}}/pomodoro-breaks
-
-
-### Criar pausa manualmente (opcional)
-POST {{baseUrl}}/pomodoro-breaks
-Content-Type: application/json
-
-{
-  "sessionId": "{{sessionId}}",
-  "duration": 5,
-  "type": "short"
-}
-
-### Buscar pausa por id
-GET {{baseUrl}}/pomodoro-breaks/{{breakId}}
-
-### Iniciar pausa
-POST {{baseUrl}}/pomodoro-breaks/{{breakId}}/start
-
-### Completar pausa
-POST {{baseUrl}}/pomodoro-breaks/{{breakId}}/complete
-
-### Excluir pausa
-DELETE {{baseUrl}}/pomodoro-breaks/{{breakId}}
-### Auth & Users (placeholders)
-
-### Login (obter token de exemplo)
+### 2. Login (obter token JWT)
+# @name login
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-	"email": "user@example.com",
-	"password": "senha123"
+  "email": "usuario@zenfocos.com",
+  "password": "senha123456"
 }
 
-### Criar usuário
-POST {{baseUrl}}/users
+###############################################################################
+### ✅ TASKS (v1) - Requer autenticação JWT
+###############################################################################
+
+### 3. Listar todas as tarefas
+GET {{baseUrl}}/v1/tasks
+Authorization: Bearer {{accessToken}}
+
+### 4. Listar tarefas agrupadas por status
+GET {{baseUrl}}/v1/tasks/grouped
+Authorization: Bearer {{accessToken}}
+
+### 5. Buscar tarefa específica por ID
+GET {{baseUrl}}/v1/tasks/{{taskId}}
+Authorization: Bearer {{accessToken}}
+
+### 6. Criar nova tarefa
+# @name createTask
+POST {{baseUrl}}/v1/tasks
+Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 {
-	"email": "user@example.com",
-	"password": "senha123",
-	"name": "Usuário Exemplo"
+  "title": "Estudar NestJS",
+  "description": "Revisar módulos, controllers e services",
+  "estimatedPomodoros": 4
 }
 
-### Exemplo protegido - listar tarefas com token
-GET {{baseUrl}}/tasks
-Authorization: Bearer {{jwtToken}}
+### 7. Atualizar tarefa completa (PUT)
+PUT {{baseUrl}}/v1/tasks/{{taskId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Estudar NestJS - Atualizado",
+  "description": "Incluir Prisma ORM e autenticação JWT",
+  "status": "IN_PROGRESS",
+  "estimatedPomodoros": 6
+}
+
+### 8. Resetar pomodoros completados de uma tarefa
+POST {{baseUrl}}/v1/tasks/{{taskId}}/reset-pomodoros
+Authorization: Bearer {{accessToken}}
+
+### 9. Deletar tarefa
+DELETE {{baseUrl}}/v1/tasks/{{taskId}}
+Authorization: Bearer {{accessToken}}
+
+###############################################################################
+### ⏱️ POMODORO SESSIONS (v1) - Requer autenticação JWT
+###############################################################################
+
+### 10. Iniciar nova sessão pomodoro para uma tarefa
+# @name startSession
+POST {{baseUrl}}/v1/pomodoro/tasks/{{taskId}}/start-session
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+### 11. List all pomodoro sessions for the user
+GET {{baseUrl}}/v1/pomodoro/sessions
+Authorization: Bearer {{accessToken}}
+
+### 12. Pausar sessão ativa
+POST {{baseUrl}}/v1/pomodoro/sessions/{{sessionId}}/pause
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+# No body required — server records pause timestamp and remainingSeconds automatically
+
+### 13. Retomar sessão pausada
+POST {{baseUrl}}/v1/pomodoro/sessions/{{sessionId}}/resume
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+# No body required — server calculates remainingSeconds based on pausedAt and stored remainingSeconds
+
+### 14. Completar sessão pomodoro
+POST {{baseUrl}}/v1/pomodoro/sessions/{{sessionId}}/complete
+Authorization: Bearer {{accessToken}}
+
+### 15. Cancelar sessão pomodoro
+POST {{baseUrl}}/v1/pomodoro/sessions/{{sessionId}}/cancel
+Authorization: Bearer {{accessToken}}
+
+###############################################################################
+### 📝 FLUXO COMPLETO DE TESTE
+###############################################################################
+
+### PASSO 1: Registrar usuário
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "fluxo@zenfocos.com",
+  "password": "senha123456",
+  "name": "Teste Fluxo"
+}
+
+### PASSO 2: Fazer login (copie o access_token da resposta)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "fluxo@zenfocos.com",
+  "password": "senha123456"
+}
+
+### PASSO 3: Criar tarefa (copie o id da resposta)
+POST {{baseUrl}}/v1/tasks
+Authorization: Bearer SEU_TOKEN_AQUI
+Content-Type: application/json
+
+{
+  "title": "Implementar API REST",
+  "description": "Criar endpoints com NestJS e Prisma",
+  "estimatedPomodoros": 5
+}
+
+### PASSO 4: Iniciar sessão pomodoro (use o taskId da resposta anterior)
+POST {{baseUrl}}/v1/pomodoro/tasks/ID_DA_TASK/start-session
+Authorization: Bearer SEU_TOKEN_AQUI
+
+### PASSO 5: List all sessions for the user
+GET {{baseUrl}}/v1/pomodoro/sessions
+Authorization: Bearer SEU_TOKEN_AQUI
+
+### PASSO 6: Completar sessão (use sessionId da resposta anterior)
+POST {{baseUrl}}/v1/pomodoro/sessions/ID_DA_SESSION/complete
+Authorization: Bearer SEU_TOKEN_AQUI
+
+### PASSO 7: Ver tarefas agrupadas (status deve ser IN_PROGRESS agora)
+GET {{baseUrl}}/v1/tasks/grouped
+Authorization: Bearer SEU_TOKEN_AQUI
+
+###############################################################################
+### 🧪 TESTES ADICIONAIS
+###############################################################################
+
+### Testar erro - tarefa não encontrada
+GET {{baseUrl}}/v1/tasks/9999
+Authorization: Bearer {{accessToken}}
+
+### Testar erro - login com senha errada
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "usuario@zenfocos.com",
+  "password": "senhaErrada"
+}
+
+### Testar erro - criar tarefa sem autenticação
+POST {{baseUrl}}/v1/tasks
+Content-Type: application/json
+
+{
+  "title": "Tarefa sem auth"
+}
+
+### Testar validação - criar tarefa com dados inválidos
+POST {{baseUrl}}/v1/tasks
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "title": "",
+  "estimatedPomodoros": -1
+}

@@ -1,159 +1,288 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🍅 ZenFocos API - Pomodoro Task Manager
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-<p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-# 🍅 ZenFocos API - Pomodoro por Task
+API RESTful construída com NestJS para gerenciar sessões Pomodoro focadas em tarefas.
 
 ## 👨‍💻 Autor
-**Seu Nome Completo**
 
-## 🔗 Link de Produção
-`https://zenfocos-api.example.com` (substituir pelo link real)
+Klésio Nascimento
 
 ## 📋 Descrição do Projeto
-ZenFocos é uma API RESTful construída com NestJS para gerenciar sessões Pomodoro focadas em tarefas. A API permite criar e gerenciar tasks, iniciar/completar sessões de pomodoro, controlar intervalos e gerar estatísticas de produtividade.
+
+ZenFocos é uma API para gerenciamento de produtividade utilizando a técnica Pomodoro. A aplicação permite:
+
+- 👤 Autenticação e autorização com JWT
+- ✅ Gerenciamento completo de tarefas (CRUD)
+- ⏱️ Controle de sessões Pomodoro por tarefa
+- 📊 Tracking de pomodoros completados
+- 🔄 Auto-atualização de status de tarefas
+- 📚 Documentação interativa com Swagger
+
+## 🔗 Links
+
+| Recurso                  | URL                                                          |
+| ------------------------ | ------------------------------------------------------------ |
+| **Repositório**          | [github.com/klsio22/zen-focos](https://github.com/klsio22/zen-focos) |
+| **API em Produção**      | _A ser configurado após deploy_                              |
+| **Swagger Docs (local)** | http://localhost:3000/api/docs                               |
+
+---
 
 ## 📌 Pré-requisitos
-- Node.js 18+
-- npm 9+ (ou yarn)
-- PostgreSQL 12+
-- Redis (opcional, para cache)
 
-## 🚀 Instalação
+- **Node.js** v20.19+, v22.12+ ou v24.0+
+- **npm** 9+
+- **Docker & Docker Compose** (para MySQL)
+- **Git**
+
+---
+
+## 🚀 Instruções de Execução
+
+### 1. Clonar repositório
+
 ```bash
-# Clonar repositório
-git clone https://github.com/seu-usuario/zenfocos-api.git
-cd zenfocos-api
+git clone https://github.com/klsio22/zen-focos.git
+cd zen-focos
+```
 
-# Instalar dependências
+### 2. Instalar dependências
+
+```bash
 npm install
+```
 
-# Copiar variáveis de ambiente de exemplo
+### 3. Configurar variáveis de ambiente
+
+```bash
 cp .env.example .env
 ```
 
-## 🛠️ Configuração do Banco de Dados
-```bash
-# Criar banco de dados (exemplo PostgreSQL)
-createdb zenfocos_db
+Edite o arquivo `.env`:
 
-# Rodar migrações (Prisma)
-npx prisma migrate dev
-
-# Popular dados iniciais (opcional)
-npx prisma db seed
-```
-
-## 🔐 Variáveis de Ambiente (.env)
-Crie um arquivo `.env` a partir de `.env.example` e ajuste os valores.
-
-Exemplo de `.env`:
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/zenfocos_db"
-JWT_SECRET="seu-jwt-secret-super-seguro"
-REDIS_URL="redis://localhost:6379"
+DATABASE_URL="mysql://zenfocos:zenfocos123@localhost:3306/zenfocos_db"
+JWT_SECRET="your-super-secret-jwt-key-change-in-production"
+NODE_ENV="development"
 PORT=3000
-NODE_ENV=development
 ```
 
-## ▶️ Execução
+### 4. Configurar Banco de Dados
+
 ```bash
-# Desenvolvimento (watch)
+# Subir MySQL via Docker
+npm run docker:up
+
+# Criar usuário MySQL com permissões
+docker exec -it prisma_mysql mysql -uroot -proot -e "CREATE USER IF NOT EXISTS 'zenfocos'@'%' IDENTIFIED BY 'zenfocos123'; GRANT ALL PRIVILEGES ON zenfocos_db.* TO 'zenfocos'@'%'; GRANT CREATE, ALTER, DROP, REFERENCES ON *.* TO 'zenfocos'@'%'; FLUSH PRIVILEGES;"
+
+# Gerar Prisma Client e aplicar migrations
+npx prisma generate
+npx prisma migrate dev --name init
+```
+
+### 5. Executar a aplicação
+
+```bash
+# Modo desenvolvimento (watch mode)
 npm run start:dev
 
-# Produção
+# Modo produção
 npm run build
 npm run start:prod
 ```
 
+### 6. Acessar a aplicação
+
+- **API**: http://localhost:3000
+- **Swagger Docs**: http://localhost:3000/api/docs
+
+---
+
+## 🔐 Variáveis de Ambiente
+
+| Variável       | Descrição              | Exemplo                          |
+| -------------- | ---------------------- | -------------------------------- |
+| `DATABASE_URL` | URL de conexão MySQL   | `mysql://user:pass@host:3306/db` |
+| `JWT_SECRET`   | Chave secreta para JWT | `your-secret-key-min-32-chars`   |
+| `NODE_ENV`     | Ambiente de execução   | `development` ou `production`    |
+| `PORT`         | Porta do servidor      | `3000`                           |
+
+---
+
 ## 📊 Diagrama de Entidade-Relacionamento (ERD)
-- O diagrama está disponível em `project-description.md` (mermaid) ou crie uma imagem `docs/erd.png` e faça referência aqui.
+
+```mermaid
+erDiagram
+    USER ||--o{ TASK : has
+    USER ||--o{ POMODORO_SESSION : has
+    TASK ||--o{ POMODORO_SESSION : has
+
+    USER {
+        int id PK
+        string email UK
+        string password
+        string name
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    TASK {
+        int id PK
+        int userId FK
+        string title
+        text description
+        enum status
+        int estimatedPomodoros
+        int completedPomodoros
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    POMODORO_SESSION {
+        int id PK
+        int userId FK
+        int taskId FK
+        int duration
+        datetime startTime
+        datetime endTime
+        datetime pausedAt
+        enum status
+        boolean isPaused
+        int remainingSeconds
+        datetime createdAt
+        datetime updatedAt
+    }
+```
+
+### Entidades
+
+| Entidade            | Descrição                             |
+| ------------------- | ------------------------------------- |
+| **User**            | Usuário do sistema com autenticação   |
+| **Task**            | Tarefa com estimativa de pomodoros    |
+| **PomodoroSession** | Sessão de foco vinculada a uma tarefa |
+
+### Status de Task
+
+- `PENDING` - Tarefa pendente
+- `IN_PROGRESS` - Em andamento (pelo menos 1 pomodoro completado)
+- `COMPLETED` - Concluída (todos pomodoros estimados completados)
+
+### Status de PomodoroSession
+
+- `ACTIVE` - Sessão em andamento
+- `COMPLETED` - Sessão finalizada com sucesso
+- `CANCELLED` - Sessão cancelada
+
+---
 
 ## 📚 Documentação Swagger
-Swagger UI: `https://zenfocos-api.example.com/api/docs` (substituir pela URL real em produção)
 
-## ✅ Checklist de Funcionalidades (RA / ID)
+A documentação interativa da API está disponível em:
 
-RA1 - Projetar e desenvolver uma API funcional utilizando o framework NestJS.
-- [ ] **ID1**: O aluno configurou corretamente o ambiente de desenvolvimento e criou a API utilizando NestJS, com rotas e controladores que seguem a arquitetura modular.
-- [ ] **ID2**: O aluno aplicou boas práticas de organização da lógica de negócios, garantindo que os services contenham a lógica de negócio e sejam chamados pelos controladores, separando responsabilidades corretamente.
-- [ ] **ID3**: O aluno utilizou providers e configurou adequadamente a injeção de dependência no NestJS, garantindo uma arquitetura modular e escalável.
-- [ ] **ID4**: O aluno demonstrou a habilidade de criar e manipular rotas HTTP, manipulando parâmetros de rota, query e body, lidando corretamente com requisições e respostas.
-- [ ] **ID5**: O aluno aplicou boas práticas de tratamento de erros, utilizando filtros globais e personalizando as mensagens de erro para garantir respostas claras e consistentes.
-- [ ] **ID6**: O aluno criou classes DTO (Data Transfer Objects) para garantir a validação e consistência dos dados em diferentes endpoints, utilizando pipes para validar entradas de dados.
-- [ ] **ID7**: O aluno aplicou corretamente pipes de validação no NestJS, verificando entradas inválidas e assegurando a integridade dos dados transmitidos.
+**URL**: http://localhost:3000/api/docs
 
-RA2 - Implementar persistência de dados com um banco de dados relacional utilizando Prisma ou TypeORM.
-- [ ] **ID8**: O aluno modelou corretamente os dados da aplicação, definindo entidades, suas relações e campos necessários, refletidos em um Diagrama de Entidade-Relacionamento (ERD).
-- [ ] **ID9**: O aluno configurou e conectou a API a um banco de dados relacional (PostgreSQL, MySQL, etc.) utilizando Prisma ou TypeORM.
-- [ ] **ID10**: O aluno criou e aplicou migrações de banco de dados para garantir a consistência dos dados entre desenvolvimento e produção.
-- [ ] **ID11**: O aluno implementou corretamente as operações CRUD (Create, Read, Update, Delete) para pelo menos uma entidade no projeto, utilizando NestJS.
+A documentação inclui:
 
-RA3 - Realizar testes automatizados para garantir a qualidade da API.
-- [ ] **ID12**: O aluno implementou testes automatizados (unitários ou de integração) utilizando Jest, validando funcionalidades críticas da API.
-- [ ] **ID13**: O aluno garantiu a cobertura de testes para, pelo menos, as principais rotas e serviços da API, incluindo operações CRUD.
+- Todos os endpoints disponíveis
+- Parâmetros de entrada e saída
+- Exemplos de requisições e respostas
+- Autenticação JWT integrada
 
-RA4 - Gerar a documentação da API e realizar o deploy em um ambiente de produção.
-- [ ] **ID14**: O aluno integrou corretamente o Swagger à API, gerando a documentação completa e interativa dos endpoints, parâmetros e respostas da API, com exemplos de requisições e respostas.
-- [ ] **ID15**: O aluno realizou o deploy da API em uma plataforma de hospedagem na nuvem (ex.: Render.com, Heroku, Vercel, etc.), garantindo que a API estivesse acessível publicamente.
-- [ ] **ID16**: O aluno garantiu que a API funcionasse corretamente no ambiente de produção, incluindo a documentação Swagger e o banco de dados.
-- [ ] **ID17**: O aluno realizou a configuração correta de variáveis de ambiente usando o ConfigModule do NestJS.
-- [ ] **ID18**: O aluno implementou corretamente o versionamento de APIs REST no NestJS, assegurando que diferentes versões da API pudessem coexistir.
+---
 
-RA5 - Implementar autenticação, autorização e segurança em APIs utilizando JWT, Guards, Middleware e Interceptadores.
-- [ ] **ID19**: O aluno configurou a autenticação na API utilizando JWT (JSON Web Tokens).
-- [ ] **ID20**: O aluno implementou controle de acesso baseado em roles e níveis de permissão, utilizando Guards para verificar permissões em rotas específicas.
-- [ ] **ID21**: O aluno configurou e utilizou middleware para manipular requisições antes que elas chegassem aos controladores, realizando tarefas como autenticação, logging ou tratamento de CORS.
-- [ ] **ID22**: O aluno implementou interceptadores para realizar logging ou modificar as respostas antes de enviá-las ao cliente.
+## ✅ Checklist de Funcionalidades
 
-## 🔎 Endpoints Principais
-- `POST /api/v1/auth/login` - Autenticação
-- `GET /api/v1/tasks` - Listar tasks
-- `POST /api/v1/tasks` - Criar task
-- `POST /api/v1/pomodoro/start` - Iniciar pomodoro
-- `POST /api/v1/pomodoro/complete` - Completar pomodoro
+### RA1 - Projetar e desenvolver uma API funcional utilizando o framework NestJS
 
-## 🧪 Testes
-Comandos:
+| ID   | Descrição                                             | Status |
+| ---- | ----------------------------------------------------- | ------ |
+| ID1  | Ambiente configurado com NestJS e arquitetura modular | ✅      |
+| ID2  | Lógica de negócio separada em services                | ✅      |
+| ID3  | Injeção de dependência configurada com providers      | ✅      |
+| ID4  | Rotas HTTP com manipulação de params, query e body    | ✅      |
+| ID5  | Tratamento de erros global com exceções NestJS        | ✅      |
+| ID6  | DTOs para validação de dados                          | ✅      |
+| ID7  | Pipes de validação aplicados globalmente              | ✅      |
+
+### RA2 - Implementar persistência de dados com banco de dados relacional
+
+| ID   | Descrição                                                | Status |
+| ---- | -------------------------------------------------------- | ------ |
+| ID8  | Modelagem de dados com ERD (User, Task, PomodoroSession) | ✅      |
+| ID9  | Conexão com MySQL via Prisma ORM                         | ✅      |
+| ID10 | Migrations criadas e aplicadas                           | ✅      |
+| ID11 | CRUD completo para Tasks e PomodoroSessions              | ✅      |
+
+### RA3 - Realizar testes automatizados
+
+| ID   | Descrição                                 | Status |
+| ---- | ----------------------------------------- | ------ |
+| ID12 | Testes automatizados com Jest             | ✅      |
+| ID13 | Cobertura de testes para rotas principais | ✅      |
+
+### RA4 - Gerar documentação da API e realizar deploy
+
+| ID   | Descrição                                   | Status |
+| ---- | ------------------------------------------- | ------ |
+| ID14 | Swagger integrado com documentação completa | ✅      |
+| ID15 | Deploy em plataforma de hospedagem na nuvem | ⬜      |
+| ID16 | API funcional em produção                   | ⬜      |
+| ID17 | Variáveis de ambiente com ConfigModule      | ✅      |
+| ID18 | Versionamento de API (v1)                   | ✅      |
+
+### RA5 - Implementar autenticação, autorização e segurança
+
+| ID   | Descrição                                  | Status |
+| ---- | ------------------------------------------ | ------ |
+| ID19 | Autenticação JWT configurada               | ✅      |
+| ID20 | Controle de acesso com Guards e roles      | ⬜      |
+| ID21 | Middleware para CORS e logging             | ⬜      |
+| ID22 | Interceptadores para logging/transformação | ⬜      |
+
+### 📊 Resumo de Progresso
+
+| RA                     | Concluído | Total  | Progresso |
+| ---------------------- | --------- | ------ | --------- |
+| RA1 - NestJS API       | 7         | 7      | 100%      |
+| RA2 - Persistência     | 4         | 4      | 100%      |
+| RA3 - Testes           | 2         | 2      | 100%      |
+| RA4 - Docs & Deploy    | 3         | 5      | 60%       |
+| RA5 - Auth & Segurança | 1         | 4      | 25%       |
+| **TOTAL**              | **17**    | **22** | **77%**   |
+
+---
+
+## 🛠️ Scripts Disponíveis
+
 ```bash
-# Unit tests
-npm run test
+# Desenvolvimento
+npm run start:dev      # Iniciar com hot-reload
 
-# E2E tests
-npm run test:e2e
+# Produção
+npm run build          # Compilar TypeScript
+npm run start:prod     # Rodar build compilado
 
-# Cobertura
-npm run test:cov
+# Prisma
+npm run prisma:generate  # Gerar Prisma Client
+npm run prisma:migrate   # Rodar migrations
+npm run prisma:studio    # Abrir Prisma Studio
+
+# Docker
+npm run docker:up      # Subir MySQL
+npm run docker:down    # Parar containers
+
+# Qualidade
+npm run lint           # ESLint
+npm run format         # Prettier
 ```
 
-## 📦 Estrutura do Projeto
-```text
-src/
-├── auth/
-├── tasks/
-├── pomodoro/
-├── users/
-├── common/
-│   ├── filters/
-│   ├── interceptors/
-│   ├── middleware/
-│   └── guards/
-├── prisma/
-└── main.ts
-```
+---
 
-## ☁️ Deploy
-Sugestões: Render, Vercel, Heroku. Configure variáveis de ambiente no serviço e aponte o banco de dados para PostgreSQL gerenciado.
+## 📄 Licença
 
-## 📌 Observações
-- Substitua `Seu Nome Completo` pelo nome do aluno responsável.
-- Atualize os links de produção e do repositório conforme necessários.
+UNLICENSED - Projeto acadêmico
+
+---
+
+**Desenvolvido como projeto acadêmico - UTFPR**
