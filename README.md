@@ -226,8 +226,8 @@ A documentação inclui:
 | ID   | Descrição                                   | Status |
 | ---- | ------------------------------------------- | ------ |
 | ID14 | Swagger integrado com documentação completa | ✅      |
-| ID15 | Deploy em plataforma de hospedagem na nuvem | ⬜      |
-| ID16 | API funcional em produção                   | ⬜      |
+| ID15 | Deploy em plataforma de hospedagem na nuvem | ✅      |
+| ID16 | API funcional em produção                   | ✅      |
 | ID17 | Variáveis de ambiente com ConfigModule      | ✅      |
 | ID18 | Versionamento de API (v1)                   | ✅      |
 
@@ -236,9 +236,9 @@ A documentação inclui:
 | ID   | Descrição                                  | Status |
 | ---- | ------------------------------------------ | ------ |
 | ID19 | Autenticação JWT configurada               | ✅      |
-| ID20 | Controle de acesso com Guards e roles      | ⬜      |
-| ID21 | Middleware para CORS e logging             | ⬜      |
-| ID22 | Interceptadores para logging/transformação | ⬜      |
+| ID20 | Controle de acesso com Guards e roles      | ✅      |
+| ID21 | Middleware para CORS e logging             | ✅      |
+| ID22 | Interceptadores para logging/transformação | ✅      |
 
 ### 📊 Resumo de Progresso
 
@@ -247,9 +247,123 @@ A documentação inclui:
 | RA1 - NestJS API       | 7         | 7      | 100%      |
 | RA2 - Persistência     | 4         | 4      | 100%      |
 | RA3 - Testes           | 2         | 2      | 100%      |
-| RA4 - Docs & Deploy    | 3         | 5      | 60%       |
-| RA5 - Auth & Segurança | 1         | 4      | 25%       |
-| **TOTAL**              | **17**    | **22** | **77%**   |
+| RA4 - Docs & Deploy    | 5         | 5      | 100%      |
+| RA5 - Auth & Segurança | 4         | 4      | 100%      |
+| **TOTAL**              | **22**    | **22** | **100%**  |
+
+---
+
+## 🚀 Deploy para Produção (Render)
+
+### Método 1: Script Automatizado (Recomendado)
+
+Execute o script de deploy que automatiza o processo:
+
+```bash
+./deploy-render.sh
+```
+
+### Método 2: Configuração Manual
+
+#### 1. Preparar Banco de Dados Externo
+
+**Opção A - PlanetScale (Recomendado):**
+```bash
+# 1. Acesse https://planetscale.com e crie uma conta
+# 2. Crie um novo database
+# 3. Copie a connection string no formato:
+# mysql://usuario:senha@host.psdb.cloud/database?sslaccept=strict
+```
+
+**Opção B - Railway:**
+```bash
+# 1. Acesse https://railway.app 
+# 2. Crie um MySQL database
+# 3. Copie a connection string
+```
+
+#### 2. Configurar Render
+
+1. **Acesse [Render](https://render.com)** e faça login
+2. **Clique em "New +" > "Web Service"**
+3. **Conecte seu repositório GitHub**
+4. **Configure os campos:**
+
+| Campo | Valor |
+|-------|--------|
+| **Name** | `zen-focos` |
+| **Runtime** | `Docker` |
+| **Branch** | `main` |
+| **Region** | `Oregon (US West)` |
+| **Instance Type** | `Free` |
+
+#### 3. Comandos de Build e Deploy
+
+| Comando | Valor |
+|---------|-------|
+| **Build Command** | `npm ci && npx prisma generate && npm run build` |
+| **Pre-Deploy Command** | `npx prisma migrate deploy` |
+| **Start Command** | `npm run start:prod` |
+
+#### 4. Variáveis de Ambiente
+
+Configure no Render Dashboard:
+
+```env
+NODE_ENV=production
+PORT=3000
+JWT_SECRET=seu-jwt-secret-super-seguro-min-32-caracteres
+DATABASE_URL=mysql://usuario:senha@host:3306/database
+```
+
+#### 5. Deploy
+
+- Clique em **"Create Web Service"**
+- Aguarde o build e deploy
+- API estará disponível em: `https://zen-focos.onrender.com`
+
+### Verificação do Deploy
+
+Após o deploy, teste os endpoints principais:
+
+```bash
+# Health check
+curl https://zen-focos.onrender.com/
+
+# Swagger docs
+curl https://zen-focos.onrender.com/api/docs
+
+# Criar usuário
+curl -X POST https://zen-focos.onrender.com/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"123456","name":"Test User"}'
+```
+
+### Estrutura de Deploy
+
+```
+zen-focos/
+├── Dockerfile              # Container configuration
+├── render.yaml             # Render service config
+├── deploy-render.sh        # Automated deploy script
+├── .dockerignore           # Docker ignore patterns
+└── package.json            # Updated build scripts
+```
+
+### Troubleshooting Deploy
+
+**Problema: Database connection error**
+```bash
+# Verificar se DATABASE_URL está correto
+# Garantir que o banco externo está acessível
+# Confirmar que Pre-Deploy Command está configurado
+```
+
+**Problema: Build timeout**
+```bash
+# Verificar se Build Command não inclui migrations
+# Separar build de migrations usando Pre-Deploy Command
+```
 
 ---
 
@@ -271,6 +385,11 @@ npm run prisma:studio    # Abrir Prisma Studio
 # Docker
 npm run docker:up      # Subir MySQL
 npm run docker:down    # Parar containers
+
+# Deploy
+npm run render:build      # Build para Render
+npm run render:predeploy  # Migrations para Render
+./deploy-render.sh        # Script automatizado de deploy
 
 # Qualidade
 npm run lint           # ESLint
