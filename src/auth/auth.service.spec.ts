@@ -69,7 +69,10 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('id');
       expect(result).toHaveProperty('email');
       expect(result).not.toHaveProperty('password');
-      expect(bcrypt.hash).toHaveBeenCalledWith(registerDto.password, 12);
+      expect(bcrypt.hash).toHaveBeenCalledWith(
+        registerDto.password,
+        expect.any(Number),
+      );
     });
 
     it('should throw ConflictException if user already exists', async () => {
@@ -109,7 +112,10 @@ describe('AuthService', () => {
 
       await service.register(registerDto);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith(registerDto.password, 12);
+      expect(bcrypt.hash).toHaveBeenCalledWith(
+        registerDto.password,
+        expect.any(Number),
+      );
     });
   });
 

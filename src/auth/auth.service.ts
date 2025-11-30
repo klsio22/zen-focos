@@ -16,10 +16,17 @@ interface JwtPayload {
 
 @Injectable()
 export class AuthService {
+  private readonly bcryptCostFactor: number;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) {
+    this.bcryptCostFactor = Math.min(
+      14,
+      Math.max(4, Number.parseInt(process.env.BCRYPT_COST_FACTOR ?? '12', 10)),
+    );
+  }
 
   async register(registerDto: RegisterDto) {
     const { email, password: pwd, name } = registerDto;
@@ -34,7 +41,7 @@ export class AuthService {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(pwd, 12);
+    const hashedPassword = await bcrypt.hash(pwd, this.bcryptCostFactor);
 
     // Create user
     const user = await this.prisma.user.create({
