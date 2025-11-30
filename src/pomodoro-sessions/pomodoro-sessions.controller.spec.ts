@@ -2,11 +2,20 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PomodoroSessionsController } from './pomodoro-sessions.controller';
 import { PomodoroSessionsService } from './pomodoro-sessions.service';
 
+interface AuthenticatedUser {
+  id: number;
+  email: string;
+  name?: string;
+}
+
+interface AuthenticatedRequest extends Request {
+  user: AuthenticatedUser;
+}
+
 describe('PomodoroSessionsController', () => {
   let controller: PomodoroSessionsController;
-  let service: PomodoroSessionsService;
 
-  const mockRequest = {
+  const mockRequest: AuthenticatedRequest = {
     user: {
       id: 1,
       email: 'user@example.com',
@@ -59,7 +68,6 @@ describe('PomodoroSessionsController', () => {
     controller = module.get<PomodoroSessionsController>(
       PomodoroSessionsController,
     );
-    service = module.get<PomodoroSessionsService>(PomodoroSessionsService);
 
     jest.clearAllMocks();
   });
@@ -74,7 +82,7 @@ describe('PomodoroSessionsController', () => {
         mockSession,
       );
 
-      const result = await controller.startSession(1, mockRequest as any);
+      const result = await controller.startSession(1, mockRequest);
 
       expect(result.status).toBe('ACTIVE');
       expect(mockPomodoroSessionsService.startSession).toHaveBeenCalledWith(
@@ -97,7 +105,7 @@ describe('PomodoroSessionsController', () => {
         pausedSession,
       );
 
-      const result = await controller.pauseSession(1, mockRequest as any);
+      const result = await controller.pauseSession(1, mockRequest);
 
       expect(result.isPaused).toBe(true);
       expect(result.pausedAt).not.toBeNull();
@@ -123,9 +131,9 @@ describe('PomodoroSessionsController', () => {
         resumeResponse,
       );
 
-      const result = await controller.resumeSession(1, mockRequest as any);
+      const result = await controller.resumeSession(1, mockRequest);
 
-      expect(result.session.isPaused).toBe(false);
+      expect((result as any).session.isPaused).toBe(false);
       expect(result).toHaveProperty('completedPomodoros');
       expect(mockPomodoroSessionsService.resumeSession).toHaveBeenCalledWith(
         1,
@@ -148,7 +156,7 @@ describe('PomodoroSessionsController', () => {
         completeResponse,
       );
 
-      const result = await controller.completeSession(1, mockRequest as any);
+      const result = await controller.completeSession(1, mockRequest);
 
       expect(result.session.status).toBe('COMPLETED');
       expect(result).toHaveProperty('completedPomodoros');
@@ -170,7 +178,7 @@ describe('PomodoroSessionsController', () => {
         cancelledSession,
       );
 
-      const result = await controller.cancelSession(1, mockRequest as any);
+      const result = await controller.cancelSession(1, mockRequest);
 
       expect(result.status).toBe('CANCELLED');
       expect(mockPomodoroSessionsService.cancelSession).toHaveBeenCalledWith(
@@ -186,7 +194,7 @@ describe('PomodoroSessionsController', () => {
         mockSession,
       ]);
 
-      const result = await controller.getSessions(mockRequest as any);
+      const result = await controller.getSessions(mockRequest);
 
       expect(Array.isArray(result)).toBe(true);
       expect(result[0]).toEqual(mockSession);
@@ -196,7 +204,7 @@ describe('PomodoroSessionsController', () => {
     it('should return empty array when user has no sessions', async () => {
       mockPomodoroSessionsService.getSessions.mockResolvedValueOnce([]);
 
-      const result = await controller.getSessions(mockRequest as any);
+      const result = await controller.getSessions(mockRequest);
 
       expect(Array.isArray(result)).toBe(true);
       expect(result).toHaveLength(0);

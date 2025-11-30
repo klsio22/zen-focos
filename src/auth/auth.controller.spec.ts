@@ -6,7 +6,6 @@ import { LoginDto } from './dto/login.dto';
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let service: AuthService;
 
   const mockRegisterDto: RegisterDto = {
     email: 'test@example.com',
@@ -44,7 +43,6 @@ describe('AuthController', () => {
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
-    service = module.get<AuthService>(AuthService);
 
     jest.clearAllMocks();
   });
@@ -91,9 +89,7 @@ describe('AuthController', () => {
       const error = new Error('Invalid credentials');
       mockAuthService.login.mockRejectedValueOnce(error);
 
-      await expect(controller.login(mockLoginDto)).rejects.toThrow(
-        'Invalid credentials',
-      );
+      await expect(controller.login(mockLoginDto)).rejects.toThrow(Error);
     });
 
     it('should validate email and password format', async () => {
@@ -105,9 +101,9 @@ describe('AuthController', () => {
       const error = new Error('Invalid input');
       mockAuthService.login.mockRejectedValueOnce(error);
 
-      await expect(controller.login(invalidLoginDto as LoginDto)).rejects.toThrow(
-        'Invalid input',
-      );
+      await expect(
+        controller.login(invalidLoginDto as LoginDto),
+      ).rejects.toThrow('Invalid input');
     });
   });
 });

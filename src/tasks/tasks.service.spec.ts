@@ -5,7 +5,6 @@ import { NotFoundException } from '@nestjs/common';
 
 describe('TasksService', () => {
   let service: TasksService;
-  let prismaService: PrismaService;
 
   const mockTask = {
     id: 1,
@@ -29,9 +28,6 @@ describe('TasksService', () => {
       update: jest.fn(),
       delete: jest.fn(),
     },
-    pomodoroSession: {
-      deleteMany: jest.fn(),
-    },
   };
 
   beforeEach(async () => {
@@ -46,7 +42,6 @@ describe('TasksService', () => {
     }).compile();
 
     service = module.get<TasksService>(TasksService);
-    prismaService = module.get<PrismaService>(PrismaService);
 
     jest.clearAllMocks();
   });
@@ -95,9 +90,7 @@ describe('TasksService', () => {
     it('should throw NotFoundException if task not found', async () => {
       mockPrismaService.task.findFirst.mockResolvedValueOnce(null);
 
-      await expect(service.findOne(999, 1)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne(999, 1)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -142,9 +135,7 @@ describe('TasksService', () => {
         completedPomodoros: 0,
       };
 
-      mockPrismaService.task.findFirst.mockResolvedValueOnce(
-        taskWithProgress,
-      );
+      mockPrismaService.task.findFirst.mockResolvedValueOnce(taskWithProgress);
       mockPrismaService.task.findUnique.mockResolvedValueOnce({
         ...taskWithProgress,
         completedPomodoros: 1,
@@ -197,9 +188,10 @@ describe('TasksService', () => {
 
       await service.incrementCompletedPomodoros(1, 1);
 
-      const lastCall = mockPrismaService.task.update.mock.calls[
-        mockPrismaService.task.update.mock.calls.length - 1
-      ][0];
+      const lastCall =
+        mockPrismaService.task.update.mock.calls[
+          mockPrismaService.task.update.mock.calls.length - 1
+        ][0];
       expect(lastCall.data.status).toBe('COMPLETED');
     });
   });

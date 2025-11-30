@@ -4,11 +4,19 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { NotFoundException } from '@nestjs/common';
 
+interface AuthenticatedUser {
+  id: number;
+  email: string;
+}
+
+interface AuthenticatedRequest extends Request {
+  user: AuthenticatedUser;
+}
+
 describe('TasksController', () => {
   let controller: TasksController;
-  let service: TasksService;
 
-  const mockRequest = {
+  const mockRequest: AuthenticatedRequest = {
     user: {
       id: 1,
       email: 'user@example.com',
@@ -47,7 +55,6 @@ describe('TasksController', () => {
     }).compile();
 
     controller = module.get<TasksController>(TasksController);
-    service = module.get<TasksService>(TasksService);
 
     jest.clearAllMocks();
   });
@@ -66,10 +73,7 @@ describe('TasksController', () => {
 
       mockTasksService.create.mockResolvedValueOnce(mockTask);
 
-      const result = await controller.create(
-        createTaskDto,
-        mockRequest as any,
-      );
+      const result = await controller.create(createTaskDto, mockRequest);
 
       expect(result).toEqual(mockTask);
       expect(mockTasksService.create).toHaveBeenCalledWith(
@@ -83,7 +87,7 @@ describe('TasksController', () => {
     it('should return all tasks for authenticated user', async () => {
       mockTasksService.findAllByUser.mockResolvedValueOnce([mockTask]);
 
-      const result = await controller.findAll(mockRequest as any);
+      const result = await controller.findAll(mockRequest);
 
       expect(Array.isArray(result)).toBe(true);
       expect(result[0]).toEqual(mockTask);
@@ -97,20 +101,18 @@ describe('TasksController', () => {
     it('should return a specific task', async () => {
       mockTasksService.findOne.mockResolvedValueOnce(mockTask);
 
-      const result = await controller.findOne(1, mockRequest as any);
+      const result = await controller.findOne(1, mockRequest);
 
       expect(result).toEqual(mockTask);
       expect(mockTasksService.findOne).toHaveBeenCalledWith(1, 1);
     });
 
     it('should throw NotFoundException if task not found', async () => {
-      mockTasksService.findOne.mockRejectedValueOnce(
-        new NotFoundException(),
-      );
+      mockTasksService.findOne.mockRejectedValueOnce(new NotFoundException());
 
-      await expect(
-        controller.findOne(1, mockRequest as any),
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne(1, mockRequest)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -121,7 +123,7 @@ describe('TasksController', () => {
 
       mockTasksService.update.mockResolvedValueOnce(updatedTask);
 
-      const result = await controller.update(1, updateDto, mockRequest as any);
+      const result = await controller.update(1, updateDto, mockRequest);
 
       expect(result.title).toBe('Updated Title');
       expect(mockTasksService.update).toHaveBeenCalledWith(1, updateDto, 1);
@@ -130,11 +132,15 @@ describe('TasksController', () => {
 
   describe('resetPomodoros', () => {
     it('should reset pomodoros and delete sessions', async () => {
-      const resetTask = { ...mockTask, completedPomodoros: 0, status: 'PENDING' };
+      const resetTask = {
+        ...mockTask,
+        completedPomodoros: 0,
+        status: 'PENDING',
+      };
 
       mockTasksService.resetPomodoros.mockResolvedValueOnce(resetTask);
 
-      const result = await controller.resetPomodoros(1, mockRequest as any);
+      const result = await controller.resetPomodoros(1, mockRequest);
 
       expect(result.completedPomodoros).toBe(0);
       expect(result.status).toBe('PENDING');

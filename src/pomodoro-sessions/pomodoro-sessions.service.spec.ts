@@ -2,12 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PomodoroSessionsService } from './pomodoro-sessions.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from '../tasks/tasks.service';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 
 describe('PomodoroSessionsService', () => {
   let service: PomodoroSessionsService;
-  let prismaService: PrismaService;
-  let tasksService: TasksService;
 
   const mockSession = {
     id: 1,
@@ -47,7 +45,8 @@ describe('PomodoroSessionsService', () => {
     updatedAt: new Date(),
   };
 
-  const mockPrismaService = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mockPrismaService: any = {
     pomodoroSession: {
       findFirst: jest.fn(),
       findMany: jest.fn(),
@@ -56,7 +55,10 @@ describe('PomodoroSessionsService', () => {
       delete: jest.fn(),
       deleteMany: jest.fn(),
     },
-    $transaction: jest.fn((callback) => callback(mockPrismaService)),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    $transaction: jest.fn((callback: (tx: any) => Promise<any>) =>
+      callback(mockPrismaService),
+    ),
   };
 
   const mockTasksService = {
@@ -80,8 +82,6 @@ describe('PomodoroSessionsService', () => {
     }).compile();
 
     service = module.get<PomodoroSessionsService>(PomodoroSessionsService);
-    prismaService = module.get<PrismaService>(PrismaService);
-    tasksService = module.get<TasksService>(TasksService);
 
     jest.clearAllMocks();
   });
@@ -100,7 +100,9 @@ describe('PomodoroSessionsService', () => {
     it('should create a new pomodoro session', async () => {
       mockTasksService.findOne.mockResolvedValueOnce(mockTask);
       mockPrismaService.pomodoroSession.findFirst.mockResolvedValueOnce(null);
-      mockPrismaService.pomodoroSession.create.mockResolvedValueOnce(mockSession);
+      mockPrismaService.pomodoroSession.create.mockResolvedValueOnce(
+        mockSession,
+      );
 
       const result = await service.startSession(1, 1);
 
