@@ -348,9 +348,10 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
   }
 
   async cancelSession(sessionId: number, userId: number) {
-    await this.findSession(sessionId, userId);
+    const session = await this.findSession(sessionId, userId);
 
-    return this.prisma.pomodoroSession.update({
+    // Cancel the session
+    await this.prisma.pomodoroSession.update({
       where: { id: sessionId },
       data: {
         status: 'CANCELLED',
@@ -359,10 +360,55 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
         remainingSeconds: null,
         pausedAt: null,
       },
-      include: {
-        task: true,
+    });
+
+    // Check if there are any OTHER active sessions left for this task
+    const otherActiveSessions = await this.prisma.pomodoroSession.findFirst({
+      where: {
+        taskId: session.taskId,
+        id: { not: sessionId }, // Exclude the cancelled session
+        status: 'ACTIVE',
       },
     });
+
+    // If no other active sessions exist, update task status
+    if (!otherActiveSessions) {
+      const task = await this.prisma.task.findUnique({
+        where: { id: session.taskId },
+      });
+
+      if (task) {
+        let taskStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
+        // If this was the only active session and task has no completed pomodoros, mark as CANCELLED
+        if (task.completedPomodoros === 0) {
+          taskStatus = 'CANCELLED';
+        } else if (task.completedPomodoros >= task.estimatedPomodoros) {
+          taskStatus = 'COMPLETED';
+        } else if (task.completedPomodoros > 0) {
+          taskStatus = 'IN_PROGRESS';
+        } else {
+          taskStatus = 'PENDING';
+        }
+
+        await this.prisma.task.update({
+          where: { id: session.taskId },
+          data: { status: taskStatus },
+        });
+      }
+    }
+
+    return this.prisma.pomodoroSession
+      .findFirst({
+        where: { id: sessionId },
+        include: { task: true },
+      })
+      .then((result) => {
+        if (!result) {
+          throw new NotFoundException('Session not found after cancellation');
+        }
+        return result;
+      });
   }
 
   async getSessions(userId: number) {

@@ -15,6 +15,10 @@ interface MockPomodoroSessionModel {
 
 interface MockPrismaServiceType {
   pomodoroSession: MockPomodoroSessionModel;
+  task: {
+    findUnique: jest.Mock;
+    update: jest.Mock;
+  };
   $transaction: jest.Mock;
 }
 
@@ -72,6 +76,10 @@ describe('PomodoroSessionsService', () => {
       update: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),
+    },
+    task: {
+      findUnique: jest.fn(),
+      update: jest.fn(),
     },
     $transaction: jest.fn(
       <T>(callback: (tx: MockPrismaServiceType) => Promise<T>): Promise<T> =>
@@ -272,6 +280,101 @@ describe('PomodoroSessionsService', () => {
       expect(result.session.status).toBe('COMPLETED');
       expect(result.completedPomodoros).toBe(1);
       expect(mockTasksService.incrementCompletedPomodoros).toHaveBeenCalled();
+    });
+  });
+
+  describe('cancelSession', () => {
+    it('should cancel a session and mark task as CANCELLED if no active sessions remain and no completed pomodoros', async () => {
+      const cancelledSession = {
+        ...mockSession,
+        status: 'CANCELLED',
+        task: { ...mockTask, status: 'CANCELLED', completedPomodoros: 0 },
+      };
+
+      mockPrismaService.pomodoroSession.findFirst
+        .mockResolvedValueOnce(mockSession) // findSession
+        .mockResolvedValueOnce(null) // check for other active sessions
+        .mockResolvedValueOnce(cancelledSession); // findFirst for cancelled session
+
+      mockPrismaService.pomodoroSession.update.mockResolvedValueOnce({
+        ...mockSession,
+        status: 'CANCELLED',
+      });
+
+      mockPrismaService.task.findUnique.mockResolvedValueOnce({
+        ...mockTask,
+        completedPomodoros: 0,
+      });
+
+      mockPrismaService.task.update.mockResolvedValueOnce({
+        ...mockTask,
+        status: 'CANCELLED',
+      });
+
+      const result = await service.cancelSession(1, 1);
+
+      expect(result.status).toBe('CANCELLED');
+      expect(result.task.status).toBe('CANCELLED');
+      expect(mockPrismaService.task.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { status: 'CANCELLED' },
+      });
+    });
+
+    it('should cancel a session and keep task status IN_PROGRESS if there are completed pomodoros', async () => {
+      const taskWithProgress = { ...mockTask, completedPomodoros: 1 };
+      const cancelledSession = {
+        ...mockSession,
+        status: 'CANCELLED',
+        task: { ...taskWithProgress, status: 'IN_PROGRESS' },
+      };
+
+      mockPrismaService.pomodoroSession.findFirst
+        .mockResolvedValueOnce(mockSession) // findSession
+        .mockResolvedValueOnce(null) // check for other active sessions
+        .mockResolvedValueOnce(cancelledSession); // findFirst for cancelled session
+
+      mockPrismaService.pomodoroSession.update.mockResolvedValueOnce({
+        ...mockSession,
+        status: 'CANCELLED',
+      });
+
+      mockPrismaService.task.findUnique.mockResolvedValueOnce(taskWithProgress);
+
+      mockPrismaService.task.update.mockResolvedValueOnce({
+        ...taskWithProgress,
+        status: 'IN_PROGRESS',
+      });
+
+      const result = await service.cancelSession(1, 1);
+
+      expect(result.status).toBe('CANCELLED');
+      expect(mockPrismaService.task.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { status: 'IN_PROGRESS' },
+      });
+    });
+
+    it('should not update task status if other active sessions still exist', async () => {
+      const cancelledSession = {
+        ...mockSession,
+        status: 'CANCELLED',
+      };
+
+      mockPrismaService.pomodoroSession.findFirst
+        .mockResolvedValueOnce(mockSession) // findSession
+        .mockResolvedValueOnce(mockSession) // check for other active sessions - returns a session (not null)
+        .mockResolvedValueOnce(cancelledSession); // findFirst for cancelled session
+
+      mockPrismaService.pomodoroSession.update.mockResolvedValueOnce({
+        ...mockSession,
+        status: 'CANCELLED',
+      });
+
+      await service.cancelSession(1, 1);
+
+      // Should NOT update task status because other active sessions still exist
+      expect(mockPrismaService.task.update).not.toHaveBeenCalled();
     });
   });
 
