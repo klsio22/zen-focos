@@ -19,8 +19,14 @@ import { PomodoroSessionsService } from './pomodoro-sessions.service';
 // pause/resume use no-body DTOs now (computed server-side)
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+interface AuthenticatedUser {
+  id: number;
+  email: string;
+  name?: string;
+}
+
 interface AuthenticatedRequest extends Request {
-  user: { id: number; email: string; name?: string };
+  user: AuthenticatedUser;
 }
 
 @ApiTags('pomodoro')

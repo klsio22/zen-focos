@@ -19,7 +19,14 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
   private _processorInterval: NodeJS.Timeout | null = null;
 
   async startSession(taskId: number, userId: number) {
-    await this.tasksService.findOne(taskId, userId);
+    const task = await this.tasksService.findOne(taskId, userId);
+
+    // Check if task is already completed
+    if (task.completedPomodoros >= task.estimatedPomodoros) {
+      throw new BadRequestException(
+        'Task is already completed. All estimated Pomodoros have been finished.',
+      );
+    }
 
     const existing = await this.prisma.pomodoroSession.findFirst({
       where: { userId, taskId, status: 'ACTIVE', isPaused: false },
@@ -189,18 +196,93 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
     const now = new Date();
 
     // compute how much time passed since pause
-    const pausedAt = session.pausedAt;
     const storedRemaining = session.remainingSeconds ?? 0;
     let remaining = storedRemaining;
 
-    if (pausedAt) {
+    if (session.pausedAt !== null) {
+      const pausedAtTime = (
+        session.pausedAt instanceof Date
+          ? session.pausedAt
+          : new Date(session.pausedAt as string | number)
+      ).getTime();
       const elapsedSincePause = Math.max(
         0,
-        Math.round((now.getTime() - pausedAt.getTime()) / 1000),
+        Math.round((now.getTime() - pausedAtTime) / 1000),
       );
       remaining = Math.max(0, storedRemaining - elapsedSincePause);
     }
 
+    // If remaining time already elapsed while paused -> complete the session
+    if (remaining <= 0) {
+      // Calculate endTime for completed session
+      let computedEndTime: Date = now;
+      if (session.pausedAt !== null) {
+        const pausedAtObj =
+          session.pausedAt instanceof Date
+            ? session.pausedAt
+            : new Date(session.pausedAt as string | number);
+        const pausedAtTime = Number(pausedAtObj.getTime());
+        const remainingMs = Number((session.remainingSeconds ?? 0) * 1000);
+        const endTimeArg: number = pausedAtTime + remainingMs;
+        computedEndTime = new Date(endTimeArg);
+      }
+
+      // mark session completed
+      const completed = await this.prisma.pomodoroSession.update({
+        where: { id: sessionId },
+        data: {
+          status: 'COMPLETED',
+          endTime: computedEndTime,
+          isPaused: false,
+          remainingSeconds: null,
+          pausedAt: null,
+        },
+      });
+
+      // increment task completed pomodoros
+      const task = await this.tasksService.incrementCompletedPomodoros(
+        session.taskId,
+        userId,
+      );
+
+      // start next session if applicable (and no active session exists)
+      if (task.completedPomodoros < task.estimatedPomodoros) {
+        const existing = await this.prisma.pomodoroSession.findFirst({
+          where: {
+            userId: session.userId,
+            taskId: session.taskId,
+            status: 'ACTIVE',
+            isPaused: false,
+          },
+        });
+
+        if (!existing) {
+          const startTime = new Date();
+          const durationMinutes = session.duration || 25;
+          const newRemaining = durationMinutes * 60;
+          const endTime = new Date(startTime.getTime() + newRemaining * 1000);
+          await this.prisma.pomodoroSession.create({
+            data: {
+              userId: session.userId,
+              taskId: session.taskId,
+              duration: durationMinutes,
+              startTime,
+              endTime,
+              status: 'ACTIVE',
+              isPaused: false,
+              remainingSeconds: newRemaining,
+            },
+          });
+        }
+      }
+
+      return {
+        session: completed,
+        completedPomodoros: task.completedPomodoros,
+      };
+    }
+
+    // otherwise resume normally and set endTime based on remainingSeconds
     const startTime = new Date();
     const endTime = new Date(startTime.getTime() + remaining * 1000);
 
@@ -285,6 +367,29 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
           remainingSeconds: remaining,
         };
       }
+
+      // for paused sessions, reflect how much would remain now if resumed
+      if (s.isPaused) {
+        const stored = s.remainingSeconds ?? 0;
+        let remaining = stored;
+        if (s.pausedAt !== null) {
+          const pausedAtTime = (
+            s.pausedAt instanceof Date
+              ? s.pausedAt
+              : new Date(s.pausedAt as string | number)
+          ).getTime();
+          const elapsed = Math.max(
+            0,
+            Math.round((now.getTime() - pausedAtTime) / 1000),
+          );
+          remaining = Math.max(0, stored - elapsed);
+        }
+        return {
+          ...s,
+          remainingSeconds: remaining,
+        };
+      }
+
       return s;
     });
   }

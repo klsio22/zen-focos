@@ -22,6 +22,16 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
+interface AuthenticatedUser {
+  id: number;
+  email: string;
+  name?: string;
+}
+
+interface AuthenticatedRequest extends Request {
+  user: AuthenticatedUser;
+}
+
 @ApiTags('tasks')
 @ApiBearerAuth()
 @Controller({
@@ -38,7 +48,7 @@ export class TasksController {
     status: 200,
     description: 'List of tasks retrieved successfully',
   })
-  findAll(@Request() req) {
+  findAll(@Request() req: AuthenticatedRequest) {
     return this.tasksService.findAllByUser(req.user.id);
   }
 
@@ -48,7 +58,7 @@ export class TasksController {
     status: 200,
     description: 'Tasks grouped by status retrieved successfully',
   })
-  findGrouped(@Request() req) {
+  findGrouped(@Request() req: AuthenticatedRequest) {
     return this.tasksService.getTasksGroupedByStatus(req.user.id);
   }
 
@@ -57,14 +67,20 @@ export class TasksController {
   @ApiParam({ name: 'id', type: Number, description: 'Task ID' })
   @ApiResponse({ status: 200, description: 'Task retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Task not found' })
-  findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.tasksService.findOne(id, req.user.id);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new task' })
   @ApiResponse({ status: 201, description: 'Task created successfully' })
-  create(@Body() createTaskDto: CreateTaskDto, @Request() req) {
+  create(
+    @Body() createTaskDto: CreateTaskDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.tasksService.create(createTaskDto, req.user.id);
   }
 
@@ -76,7 +92,7 @@ export class TasksController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateTaskDto: UpdateTaskDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.tasksService.update(id, updateTaskDto, req.user.id);
   }
@@ -86,7 +102,10 @@ export class TasksController {
   @ApiParam({ name: 'id', type: Number, description: 'Task ID' })
   @ApiResponse({ status: 200, description: 'Task deleted successfully' })
   @ApiResponse({ status: 404, description: 'Task not found' })
-  remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.tasksService.remove(id, req.user.id);
   }
 }

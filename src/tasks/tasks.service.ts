@@ -103,7 +103,12 @@ export class TasksService {
   }
 
   async incrementCompletedPomodoros(id: number, userId: number) {
-    await this.findOne(id, userId); // Verify ownership
+    const task = await this.findOne(id, userId); // Verify ownership
+
+    // Prevent incrementing beyond estimated
+    if (task.completedPomodoros >= task.estimatedPomodoros) {
+      return task; // Return task as-is without incrementing
+    }
 
     await this.prisma.task.update({
       where: { id },
