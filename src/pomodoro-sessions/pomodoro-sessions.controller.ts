@@ -16,8 +16,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { PomodoroSessionsService } from './pomodoro-sessions.service';
-import { PauseSessionDto } from './dto/pause-session.dto';
-import { ResumeSessionDto } from './dto/resume-session.dto';
+// pause/resume use no-body DTOs now (computed server-side)
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 interface AuthenticatedRequest extends Request {
@@ -58,10 +57,9 @@ export class PomodoroSessionsController {
   })
   async pauseSession(
     @Param('sessionId', ParseIntPipe) sessionId: number,
-    @Body() pauseDto: PauseSessionDto,
     @Request() req: AuthenticatedRequest,
   ) {
-    return this.pomodoroService.pauseSession(sessionId, pauseDto, req.user.id);
+    return this.pomodoroService.pauseSession(sessionId, req.user.id);
   }
 
   @Post('sessions/:sessionId/resume')
@@ -71,14 +69,9 @@ export class PomodoroSessionsController {
   @ApiResponse({ status: 400, description: 'Session is not paused' })
   async resumeSession(
     @Param('sessionId', ParseIntPipe) sessionId: number,
-    @Body() resumeDto: ResumeSessionDto,
     @Request() req: AuthenticatedRequest,
   ) {
-    return this.pomodoroService.resumeSession(
-      sessionId,
-      resumeDto,
-      req.user.id,
-    );
+    return this.pomodoroService.resumeSession(sessionId, req.user.id);
   }
 
   @Post('sessions/:sessionId/complete')

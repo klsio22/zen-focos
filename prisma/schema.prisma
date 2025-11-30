@@ -48,6 +48,7 @@ model PomodoroSession {
   duration          Int             @default(25)
   startTime         DateTime
   endTime           DateTime?
+  pausedAt          DateTime?
   status            SessionStatus   @default(ACTIVE)
   isPaused          Boolean         @default(false)
   remainingSeconds  Int?

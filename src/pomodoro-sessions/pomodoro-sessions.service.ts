@@ -7,8 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from '../tasks/tasks.service';
-import { PauseSessionDto } from './dto/pause-session.dto';
-import { ResumeSessionDto } from './dto/resume-session.dto';
+// Pause/resume DTOs are intentionally empty; logic is server-side
 
 @Injectable()
 export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
@@ -78,6 +77,7 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
             endTime: session.endTime || now,
             isPaused: false,
             remainingSeconds: null,
+            pausedAt: null,
           },
         });
 
@@ -142,11 +142,7 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async pauseSession(
-    sessionId: number,
-    pauseDto: PauseSessionDto,
-    userId: number,
-  ) {
+  async pauseSession(sessionId: number, userId: number) {
     const session = await this.findSession(sessionId, userId);
 
     if (session.status !== 'ACTIVE') {
@@ -157,18 +153,16 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException('Session is already paused');
     }
 
-    // determine remainingSeconds if not provided using endTime
-    let remaining = pauseDto.remainingSeconds;
-    if (remaining === undefined || remaining === null) {
-      if (session.endTime) {
-        const now = new Date();
-        remaining = Math.max(
-          0,
-          Math.round((session.endTime.getTime() - now.getTime()) / 1000),
-        );
-      } else {
-        remaining = session.remainingSeconds ?? 0;
-      }
+    // compute remainingSeconds from endTime if available
+    let remaining: number;
+    if (session.endTime) {
+      const now = new Date();
+      remaining = Math.max(
+        0,
+        Math.round((session.endTime.getTime() - now.getTime()) / 1000),
+      );
+    } else {
+      remaining = session.remainingSeconds ?? 0;
     }
 
     return this.prisma.pomodoroSession.update({
@@ -176,6 +170,7 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
       data: {
         isPaused: true,
         remainingSeconds: remaining,
+        pausedAt: new Date(),
         endTime: null,
       },
       include: {
@@ -184,20 +179,29 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async resumeSession(
-    sessionId: number,
-    resumeDto: ResumeSessionDto,
-    userId: number,
-  ) {
+  async resumeSession(sessionId: number, userId: number) {
     const session = await this.findSession(sessionId, userId);
 
     if (!session.isPaused) {
       throw new BadRequestException('Session is not paused');
     }
 
+    const now = new Date();
+
+    // compute how much time passed since pause
+    const pausedAt = session.pausedAt;
+    const storedRemaining = session.remainingSeconds ?? 0;
+    let remaining = storedRemaining;
+
+    if (pausedAt) {
+      const elapsedSincePause = Math.max(
+        0,
+        Math.round((now.getTime() - pausedAt.getTime()) / 1000),
+      );
+      remaining = Math.max(0, storedRemaining - elapsedSincePause);
+    }
+
     const startTime = new Date();
-    const remaining =
-      resumeDto.remainingSeconds ?? session.remainingSeconds ?? 0;
     const endTime = new Date(startTime.getTime() + remaining * 1000);
 
     return this.prisma.pomodoroSession.update({
@@ -208,6 +212,7 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
         startTime,
         endTime,
         remainingSeconds: remaining,
+        pausedAt: null,
       },
       include: {
         task: true,
@@ -225,6 +230,7 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
         endTime: new Date(),
         isPaused: false,
         remainingSeconds: null,
+        pausedAt: null,
       },
     });
 
@@ -250,6 +256,7 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
         endTime: new Date(),
         isPaused: false,
         remainingSeconds: null,
+        pausedAt: null,
       },
       include: {
         task: true,

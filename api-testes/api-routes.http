@@ -98,18 +98,14 @@ POST {{baseUrl}}/v1/pomodoro/sessions/{{sessionId}}/pause
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
-{
-  "remainingSeconds": 900
-}
+# No body required — server records pause timestamp and remainingSeconds automatically
 
 ### 12. Retomar sessão pausada
 POST {{baseUrl}}/v1/pomodoro/sessions/{{sessionId}}/resume
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
-{
-  "remainingSeconds": 900
-}
+# No body required — server calculates remainingSeconds based on pausedAt and stored remainingSeconds
 
 ### 13. Completar sessão pomodoro
 POST {{baseUrl}}/v1/pomodoro/sessions/{{sessionId}}/complete

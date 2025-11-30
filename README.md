@@ -319,24 +319,18 @@ Iniciar nova sessão pomodoro para uma tarefa
 #### POST `/v1/pomodoro/sessions/:sessionId/pause`
 Pausar sessão ativa
 
-**Body:**
-```json
-{
-  "remainingSeconds": 900
-}
-```
+**Body:** none
+
+- Server behavior: computes and saves `remainingSeconds` automatically based on `endTime`, sets `pausedAt` to the pause timestamp, clears `endTime`, and marks the session as paused.
 
 **Response:** `200 OK`
 
 #### POST `/v1/pomodoro/sessions/:sessionId/resume`
 Retomar sessão pausada
 
-**Body:**
-```json
-{
-  "remainingSeconds": 900
-}
-```
+**Body:** none
+
+- Server behavior: computes elapsed time since `pausedAt`, adjusts `remainingSeconds` accordingly, sets a new `startTime` and `endTime` and resumes the session.
 
 **Response:** `200 OK`
 
