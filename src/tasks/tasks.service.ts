@@ -79,15 +79,7 @@ export class TasksService {
       data.completedPomodoros = updateTaskDto.completedPomodoros;
     }
     if (updateTaskDto.status !== undefined) {
-      const status = String(updateTaskDto.status);
-      const validStatuses: readonly string[] = [
-        'PENDING',
-        'IN_PROGRESS',
-        'COMPLETED',
-      ];
-      if (validStatuses.includes(status)) {
-        data.status = status as TaskStatus;
-      }
+      data.status = updateTaskDto.status as TaskStatus;
     }
 
     await this.prisma.task.update({
