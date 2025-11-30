@@ -75,7 +75,11 @@ Content-Type: application/json
   "estimatedPomodoros": 6
 }
 
-### 8. Deletar tarefa
+### 8. Resetar pomodoros completados de uma tarefa
+POST {{baseUrl}}/v1/tasks/{{taskId}}/reset-pomodoros
+Authorization: Bearer {{accessToken}}
+
+### 9. Deletar tarefa
 DELETE {{baseUrl}}/v1/tasks/{{taskId}}
 Authorization: Bearer {{accessToken}}
 
@@ -83,35 +87,35 @@ Authorization: Bearer {{accessToken}}
 ### ⏱️ POMODORO SESSIONS (v1) - Requer autenticação JWT
 ###############################################################################
 
-### 9. Iniciar nova sessão pomodoro para uma tarefa
+### 10. Iniciar nova sessão pomodoro para uma tarefa
 # @name startSession
 POST {{baseUrl}}/v1/pomodoro/tasks/{{taskId}}/start-session
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
-### 10. List all pomodoro sessions for the user
+### 11. List all pomodoro sessions for the user
 GET {{baseUrl}}/v1/pomodoro/sessions
 Authorization: Bearer {{accessToken}}
 
-### 11. Pausar sessão ativa
+### 12. Pausar sessão ativa
 POST {{baseUrl}}/v1/pomodoro/sessions/{{sessionId}}/pause
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 # No body required — server records pause timestamp and remainingSeconds automatically
 
-### 12. Retomar sessão pausada
+### 13. Retomar sessão pausada
 POST {{baseUrl}}/v1/pomodoro/sessions/{{sessionId}}/resume
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 # No body required — server calculates remainingSeconds based on pausedAt and stored remainingSeconds
 
-### 13. Completar sessão pomodoro
+### 14. Completar sessão pomodoro
 POST {{baseUrl}}/v1/pomodoro/sessions/{{sessionId}}/complete
 Authorization: Bearer {{accessToken}}
 
-### 14. Cancelar sessão pomodoro
+### 15. Cancelar sessão pomodoro
 POST {{baseUrl}}/v1/pomodoro/sessions/{{sessionId}}/cancel
 Authorization: Bearer {{accessToken}}
 

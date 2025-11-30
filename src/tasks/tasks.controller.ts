@@ -97,6 +97,18 @@ export class TasksController {
     return this.tasksService.update(id, updateTaskDto, req.user.id);
   }
 
+  @Post(':id/reset-pomodoros')
+  @ApiOperation({ summary: 'Reset completed pomodoros count to 0' })
+  @ApiParam({ name: 'id', type: Number, description: 'Task ID' })
+  @ApiResponse({ status: 200, description: 'Pomodoros reset successfully' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
+  resetPomodoros(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.tasksService.resetPomodoros(id, req.user.id);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a task' })
   @ApiParam({ name: 'id', type: Number, description: 'Task ID' })

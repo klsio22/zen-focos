@@ -122,6 +122,19 @@ export class TasksService {
     return this.updateTaskStatus(id);
   }
 
+  async resetPomodoros(id: number, userId: number) {
+    await this.findOne(id, userId); // Verify ownership
+
+    await this.prisma.task.update({
+      where: { id },
+      data: {
+        completedPomodoros: 0,
+      },
+    });
+
+    return this.updateTaskStatus(id);
+  }
+
   private async updateTaskStatus(taskId: number) {
     const task = await this.prisma.task.findUnique({
       where: { id: taskId },
