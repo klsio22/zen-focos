@@ -23,7 +23,7 @@ export class PomodoroSessionsService {
     });
     if (existing) {
       throw new BadRequestException(
-        'Já existe uma sessão pomodoro ativa para esta tarefa',
+        'There is already an active Pomodoro session for this task.',
       );
     }
 
@@ -155,7 +155,7 @@ export class PomodoroSessionsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    const active = sessions.find((session) => this.isActive(session)) || null;
+    const active = sessions.find((session) => this.isActive(session)) ?? null;
     const paused = sessions.filter((session) => session.isPaused);
 
     return { active, paused };
