@@ -157,11 +157,26 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException('Session is already paused');
     }
 
+    // determine remainingSeconds if not provided using endTime
+    let remaining = pauseDto.remainingSeconds;
+    if (remaining === undefined || remaining === null) {
+      if (session.endTime) {
+        const now = new Date();
+        remaining = Math.max(
+          0,
+          Math.round((session.endTime.getTime() - now.getTime()) / 1000),
+        );
+      } else {
+        remaining = session.remainingSeconds ?? 0;
+      }
+    }
+
     return this.prisma.pomodoroSession.update({
       where: { id: sessionId },
       data: {
         isPaused: true,
-        remainingSeconds: pauseDto.remainingSeconds,
+        remainingSeconds: remaining,
+        endTime: null,
       },
       include: {
         task: true,
@@ -180,13 +195,18 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException('Session is not paused');
     }
 
+    const startTime = new Date();
+    const remaining = resumeDto.remainingSeconds ?? session.remainingSeconds ?? 0;
+    const endTime = new Date(startTime.getTime() + remaining * 1000);
+
     return this.prisma.pomodoroSession.update({
       where: { id: sessionId },
       data: {
         isPaused: false,
         status: 'ACTIVE',
-        startTime: new Date(),
-        remainingSeconds: resumeDto.remainingSeconds,
+        startTime,
+        endTime,
+        remainingSeconds: remaining,
       },
       include: {
         task: true,
@@ -244,7 +264,21 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
       orderBy: { createdAt: 'desc' },
     });
 
-    return sessions;
+    const now = new Date();
+    // compute remainingSeconds on-the-fly for active (not paused) sessions
+    return sessions.map((s) => {
+      if (s.status === 'ACTIVE' && !s.isPaused) {
+        const end = s.endTime;
+        const remaining = end
+          ? Math.max(0, Math.round((end.getTime() - now.getTime()) / 1000))
+          : (s.remainingSeconds ?? 0);
+        return {
+          ...s,
+          remainingSeconds: remaining,
+        };
+      }
+      return s;
+    });
   }
 
   private async findSession(sessionId: number, userId: number) {
