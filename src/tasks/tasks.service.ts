@@ -125,17 +125,17 @@ export class TasksService {
   async resetPomodoros(id: number, userId: number) {
     await this.findOne(id, userId); // Verify ownership
 
-    // Delete all sessions associated with this task
-    await this.prisma.pomodoroSession.deleteMany({
-      where: { taskId: id },
-    });
-
     // Reset completed pomodoros to 0
     await this.prisma.task.update({
       where: { id },
       data: {
         completedPomodoros: 0,
       },
+    });
+
+    // Delete all sessions associated with this task
+    await this.prisma.pomodoroSession.deleteMany({
+      where: { taskId: id },
     });
 
     return this.updateTaskStatus(id);
