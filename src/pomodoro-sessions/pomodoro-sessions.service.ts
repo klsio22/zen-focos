@@ -4,18 +4,21 @@ import {
   BadRequestException,
   OnModuleInit,
   OnModuleDestroy,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from '../tasks/tasks.service';
 
 @Injectable()
 export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(PomodoroSessionsService.name);
+  private _processorInterval: NodeJS.Timeout | null = null;
+  private _processorRunning = false;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly tasksService: TasksService,
   ) {}
-
-  private _processorInterval: NodeJS.Timeout | null = null;
 
   async startSession(taskId: number, userId: number) {
     const task = await this.tasksService.findOne(taskId, userId);
@@ -60,96 +63,140 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
 
   // Periodic processor: check for expired active sessions and roll them over
   async handleExpiredSessions() {
-    const now = new Date();
+    // Prevent overlapping executions
+    if (this._processorRunning) {
+      this.logger.debug('Previous processor run still in progress, skipping');
+      return;
+    }
 
-    const expired = await this.prisma.pomodoroSession.findMany({
-      where: {
-        status: 'ACTIVE',
-        isPaused: false,
-        endTime: { lte: now },
-      },
-      include: { task: true },
-    });
+    this._processorRunning = true;
+    const startTime = Date.now();
 
-    if (!expired || expired.length === 0) return;
+    try {
+      const now = new Date();
 
-    for (const session of expired) {
-      try {
-        await this.prisma.$transaction(async (tx) => {
-          await tx.pomodoroSession.update({
-            where: { id: session.id },
-            data: {
-              status: 'COMPLETED',
-              endTime: session.endTime || now,
-              isPaused: false,
-              remainingSeconds: null,
-              pausedAt: null,
-            },
-          });
+      const expired = await this.prisma.pomodoroSession.findMany({
+        where: {
+          status: 'ACTIVE',
+          isPaused: false,
+          endTime: { lte: now },
+        },
+        include: { task: true },
+      });
 
-          const task = await this.tasksService.incrementCompletedPomodoros(
-            session.taskId,
-            session.userId,
-          );
+      if (!expired || expired.length === 0) {
+        return;
+      }
 
-          if (task.completedPomodoros < task.estimatedPomodoros) {
-            const existing = await tx.pomodoroSession.findFirst({
-              where: {
-                userId: session.userId,
-                taskId: session.taskId,
-                status: 'ACTIVE',
+      this.logger.debug(`Processing ${expired.length} expired session(s)`);
+
+      for (const session of expired) {
+        try {
+          await this.prisma.$transaction(async (tx) => {
+            await tx.pomodoroSession.update({
+              where: { id: session.id },
+              data: {
+                status: 'COMPLETED',
+                endTime: session.endTime || now,
                 isPaused: false,
+                remainingSeconds: null,
+                pausedAt: null,
               },
             });
 
-            if (!existing) {
-              const startTime = new Date();
-              const durationMinutes = session.duration || 25;
-              const remainingSeconds = durationMinutes * 60;
-              const endTime = new Date(
-                startTime.getTime() + remainingSeconds * 1000,
-              );
+            const task = await this.tasksService.incrementCompletedPomodoros(
+              session.taskId,
+              session.userId,
+            );
 
-              await tx.pomodoroSession.create({
-                data: {
-                  userId: session.userId,
-                  taskId: session.taskId,
-                  duration: durationMinutes,
-                  startTime,
-                  endTime,
-                  status: 'ACTIVE',
-                  isPaused: false,
-                  remainingSeconds,
-                },
-              });
-            }
+            await this.maybeStartNextSession(session, task, tx);
+          });
+        } catch (err) {
+          if (
+            err instanceof Error &&
+            err.message.includes('Unique constraint failed')
+          ) {
+            this.logger.warn(
+              `Session rollover skipped: Active session already exists for task ${session.taskId}`,
+            );
+          } else {
+            this.logger.error(
+              `Error processing expired Pomodoro session ${session.id}:`,
+              err instanceof Error ? err.message : String(err),
+            );
           }
-        });
-      } catch (err) {
-        if (
-          err instanceof Error &&
-          err.message.includes('Unique constraint failed')
-        ) {
-          console.warn(
-            `Session rollover skipped: Active session already exists for task ${session.taskId}`,
-          );
-        } else {
-          console.error('Error processing expired Pomodoro session:', err);
         }
+      }
+
+      const duration = Date.now() - startTime;
+      this.logger.debug(
+        `Processor completed in ${duration}ms, processed ${expired.length} session(s)`,
+      );
+    } finally {
+      this._processorRunning = false;
+    }
+  }
+
+  private async maybeStartNextSession(
+    session: {
+      duration: number | null;
+      userId: number;
+      taskId: number;
+    },
+    task: { completedPomodoros: number; estimatedPomodoros: number },
+    tx: Parameters<Parameters<typeof this.prisma.$transaction>[0]>[0],
+  ) {
+    if (task.completedPomodoros < task.estimatedPomodoros) {
+      const existing = await tx.pomodoroSession.findFirst({
+        where: {
+          userId: session.userId,
+          taskId: session.taskId,
+          status: 'ACTIVE',
+          isPaused: false,
+        },
+      });
+
+      if (!existing) {
+        const startTime = new Date();
+        const durationMinutes = session.duration || 25;
+        const remainingSeconds = durationMinutes * 60;
+        const endTime = new Date(startTime.getTime() + remainingSeconds * 1000);
+
+        await tx.pomodoroSession.create({
+          data: {
+            userId: session.userId,
+            taskId: session.taskId,
+            duration: durationMinutes,
+            startTime,
+            endTime,
+            status: 'ACTIVE',
+            isPaused: false,
+            remainingSeconds,
+          },
+        });
+
+        this.logger.debug(
+          `Auto-started new session for task ${session.taskId}`,
+        );
       }
     }
   }
 
   onModuleInit(): void {
+    this.logger.log('Initializing periodic session processor (15s interval)');
     this._processorInterval = setInterval(() => {
       this.handleExpiredSessions().catch((err) => {
-        console.error('Error in handleExpiredSessions:', err);
+        this.logger.error(
+          'Fatal error in handleExpiredSessions:',
+          err instanceof Error ? err.message : String(err),
+        );
       });
     }, 15 * 1000);
   }
 
   onModuleDestroy(): void {
     if (this._processorInterval) {
+      this.logger.log('Destroying periodic session processor');
       clearInterval(this._processorInterval);
       this._processorInterval = null;
     }
@@ -239,36 +286,8 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
           userId,
         );
 
-        // start next session if applicable (and no active session exists)
-        if (task.completedPomodoros < task.estimatedPomodoros) {
-          const existing = await tx.pomodoroSession.findFirst({
-            where: {
-              userId: session.userId,
-              taskId: session.taskId,
-              status: 'ACTIVE',
-              isPaused: false,
-            },
-          });
-
-          if (!existing) {
-            const startTime = new Date();
-            const durationMinutes = session.duration || 25;
-            const newRemaining = durationMinutes * 60;
-            const endTime = new Date(startTime.getTime() + newRemaining * 1000);
-            await tx.pomodoroSession.create({
-              data: {
-                userId: session.userId,
-                taskId: session.taskId,
-                duration: durationMinutes,
-                startTime,
-                endTime,
-                status: 'ACTIVE',
-                isPaused: false,
-                remainingSeconds: newRemaining,
-              },
-            });
-          }
-        }
+        // start next session if applicable
+        await this.maybeStartNextSession(session, task, tx);
 
         return { completed, task };
       });
