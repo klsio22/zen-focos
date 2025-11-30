@@ -371,31 +371,12 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
       },
     });
 
-    // If no other active sessions exist, update task status
+    // If no other active sessions exist, update task status to PENDING
     if (!otherActiveSessions) {
-      const task = await this.prisma.task.findUnique({
+      await this.prisma.task.update({
         where: { id: session.taskId },
+        data: { status: 'PENDING' },
       });
-
-      if (task) {
-        let taskStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
-
-        // If this was the only active session and task has no completed pomodoros, mark as CANCELLED
-        if (task.completedPomodoros === 0) {
-          taskStatus = 'CANCELLED';
-        } else if (task.completedPomodoros >= task.estimatedPomodoros) {
-          taskStatus = 'COMPLETED';
-        } else if (task.completedPomodoros > 0) {
-          taskStatus = 'IN_PROGRESS';
-        } else {
-          taskStatus = 'PENDING';
-        }
-
-        await this.prisma.task.update({
-          where: { id: session.taskId },
-          data: { status: taskStatus },
-        });
-      }
     }
 
     return this.prisma.pomodoroSession

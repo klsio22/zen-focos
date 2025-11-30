@@ -284,11 +284,11 @@ describe('PomodoroSessionsService', () => {
   });
 
   describe('cancelSession', () => {
-    it('should cancel a session and mark task as CANCELLED if no active sessions remain and no completed pomodoros', async () => {
+    it('should cancel a session and mark task as PENDING', async () => {
       const cancelledSession = {
         ...mockSession,
         status: 'CANCELLED',
-        task: { ...mockTask, status: 'CANCELLED', completedPomodoros: 0 },
+        task: { ...mockTask, status: 'PENDING', completedPomodoros: 0 },
       };
 
       mockPrismaService.pomodoroSession.findFirst
@@ -301,32 +301,31 @@ describe('PomodoroSessionsService', () => {
         status: 'CANCELLED',
       });
 
-      mockPrismaService.task.findUnique.mockResolvedValueOnce({
-        ...mockTask,
-        completedPomodoros: 0,
-      });
-
       mockPrismaService.task.update.mockResolvedValueOnce({
         ...mockTask,
-        status: 'CANCELLED',
+        status: 'PENDING',
       });
 
       const result = await service.cancelSession(1, 1);
 
       expect(result.status).toBe('CANCELLED');
-      expect(result.task.status).toBe('CANCELLED');
+      expect(result.task.status).toBe('PENDING');
       expect(mockPrismaService.task.update).toHaveBeenCalledWith({
         where: { id: 1 },
-        data: { status: 'CANCELLED' },
+        data: { status: 'PENDING' },
       });
     });
 
-    it('should cancel a session and keep task status IN_PROGRESS if there are completed pomodoros', async () => {
-      const taskWithProgress = { ...mockTask, completedPomodoros: 1 };
+    it('should cancel a session and mark task as PENDING even with completed pomodoros', async () => {
+      const taskWithProgress = {
+        ...mockTask,
+        completedPomodoros: 1,
+        status: 'IN_PROGRESS',
+      };
       const cancelledSession = {
         ...mockSession,
         status: 'CANCELLED',
-        task: { ...taskWithProgress, status: 'IN_PROGRESS' },
+        task: { ...taskWithProgress, status: 'PENDING' },
       };
 
       mockPrismaService.pomodoroSession.findFirst
@@ -339,19 +338,18 @@ describe('PomodoroSessionsService', () => {
         status: 'CANCELLED',
       });
 
-      mockPrismaService.task.findUnique.mockResolvedValueOnce(taskWithProgress);
-
       mockPrismaService.task.update.mockResolvedValueOnce({
         ...taskWithProgress,
-        status: 'IN_PROGRESS',
+        status: 'PENDING',
       });
 
       const result = await service.cancelSession(1, 1);
 
       expect(result.status).toBe('CANCELLED');
+      expect(result.task.status).toBe('PENDING');
       expect(mockPrismaService.task.update).toHaveBeenCalledWith({
         where: { id: 1 },
-        data: { status: 'IN_PROGRESS' },
+        data: { status: 'PENDING' },
       });
     });
 
