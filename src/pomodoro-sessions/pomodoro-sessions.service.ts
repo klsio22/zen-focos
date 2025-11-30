@@ -71,6 +71,7 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
 
     this._processorRunning = true;
     const startTime = Date.now();
+    this.logger.debug('Processor cycle started');
 
     try {
       const now = new Date();
@@ -85,6 +86,7 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
       });
 
       if (!expired || expired.length === 0) {
+        this.logger.debug('No expired sessions found');
         return;
       }
 
@@ -129,8 +131,8 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
       }
 
       const duration = Date.now() - startTime;
-      this.logger.debug(
-        `Processor completed in ${duration}ms, processed ${expired.length} session(s)`,
+      this.logger.log(
+        `Processor cycle completed successfully in ${duration}ms, processed ${expired.length} session(s)`,
       );
     } finally {
       this._processorRunning = false;
@@ -187,11 +189,12 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
     this._processorInterval = setInterval(() => {
       this.handleExpiredSessions().catch((err) => {
         this.logger.error(
-          'Fatal error in handleExpiredSessions:',
-          err instanceof Error ? err.message : String(err),
+          'Fatal error in handleExpiredSessions',
+          err instanceof Error ? err.stack : String(err),
         );
       });
     }, 15 * 1000);
+    this.logger.debug('Periodic session processor started successfully');
   }
 
   onModuleDestroy(): void {
