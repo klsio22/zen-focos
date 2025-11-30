@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from '../tasks/tasks.service';
-// Pause/resume DTOs are intentionally empty; logic is server-side
 
 @Injectable()
 export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
@@ -143,7 +142,9 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void {
     this._processorInterval = setInterval(() => {
-      this.handleExpiredSessions().catch(() => undefined);
+      this.handleExpiredSessions().catch((err) => {
+        console.error('Error in handleExpiredSessions:', err);
+      });
     }, 15 * 1000);
   }
 
