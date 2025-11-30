@@ -13,6 +13,7 @@ model User {
   email     String   @unique
   password  String
   name      String?
+  role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -69,4 +70,9 @@ enum SessionStatus {
   ACTIVE
   COMPLETED
   CANCELLED
+}
+
+enum Role {
+  USER
+  ADMIN
 }
