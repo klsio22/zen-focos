@@ -1,0 +1,44 @@
+# Dependências
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Build artifacts
+dist
+
+# Arquivos de desenvolvimento
+.git
+.gitignore
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testes
+coverage
+test
+*.spec.ts
+*.test.ts
+jest.config.js
+jest-e2e.json
+
+# Documentação
+README.md
+docs
+
+# Arquivos desnecessários para produção
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Prisma migrations (copiadas separadamente se necessário)
+# prisma/migrations

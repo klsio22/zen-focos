@@ -1,0 +1,33 @@
+# Render.yaml - Configuração de Deploy para Render
+# https://render.com/docs/infrastructure-as-code
+
+services:
+  - type: web
+    name: zen-focos-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        sync: false # Configurar manualmente no painel do Render
+      - key: JWT_SECRET
+        generateValue: true
+      - key: BCRYPT_COST_FACTOR
+        value: 12
+      - key: ALLOWED_ORIGINS
+        value: "*"
+    buildCommand: ""
+    startCommand: ""
+
+# Nota: O banco de dados MySQL deve ser configurado separadamente
+# Opções recomendadas:
+# 1. PlanetScale (MySQL serverless) - https://planetscale.com
+# 2. Railway (MySQL) - https://railway.app
+# 3. Render PostgreSQL (se migrar para PostgreSQL)
