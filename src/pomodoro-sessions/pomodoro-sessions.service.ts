@@ -200,24 +200,10 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
 
     const now = new Date();
 
-    // compute how much time passed since pause
-    const storedRemaining = session.remainingSeconds ?? 0;
-    let remaining = storedRemaining;
+    // When paused, remaining time is frozen at storedRemaining
+    const remaining = session.remainingSeconds ?? 0;
 
-    if (session.pausedAt !== null) {
-      const pausedAtTime = (
-        session.pausedAt instanceof Date
-          ? session.pausedAt
-          : new Date(session.pausedAt as string | number)
-      ).getTime();
-      const elapsedSincePause = Math.max(
-        0,
-        Math.round((now.getTime() - pausedAtTime) / 1000),
-      );
-      remaining = Math.max(0, storedRemaining - elapsedSincePause);
-    }
-
-    // If remaining time already elapsed while paused -> complete the session
+    // If remaining time is already 0 -> complete the session
     if (remaining <= 0) {
       // Calculate endTime for completed session
       let computedEndTime: Date = now;
@@ -378,28 +364,8 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
         };
       }
 
-      // for paused sessions, reflect how much would remain now if resumed
-      if (s.isPaused) {
-        const stored = s.remainingSeconds ?? 0;
-        let remaining = stored;
-        if (s.pausedAt !== null) {
-          const pausedAtTime = (
-            s.pausedAt instanceof Date
-              ? s.pausedAt
-              : new Date(s.pausedAt as string | number)
-          ).getTime();
-          const elapsed = Math.max(
-            0,
-            Math.round((now.getTime() - pausedAtTime) / 1000),
-          );
-          remaining = Math.max(0, stored - elapsed);
-        }
-        return {
-          ...s,
-          remainingSeconds: remaining,
-        };
-      }
-
+      // for paused sessions, remaining time is frozen at storedRemaining
+      // no need to recalculate - just return as-is
       return s;
     });
   }
@@ -415,9 +381,5 @@ export class PomodoroSessionsService implements OnModuleInit, OnModuleDestroy {
     }
 
     return session;
-  }
-
-  private isActive(session: { status: string; isPaused: boolean }): boolean {
-    return session.status === 'ACTIVE' && !session.isPaused;
   }
 }

@@ -1,12 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsInt,
-  Min,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsOptional, IsInt, Min, MaxLength } from 'class-validator';
 
 export class CreateTaskDto {
   @ApiProperty({
@@ -26,27 +19,8 @@ export class CreateTaskDto {
   @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({
-    enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED'],
-    description: 'Task status',
-    example: 'PENDING',
-  })
-  @IsEnum(['PENDING', 'IN_PROGRESS', 'COMPLETED'])
-  @IsOptional()
-  status?: string;
-
   @ApiProperty({ description: 'Estimated pomodoros', minimum: 1, example: 3 })
   @IsInt()
   @Min(1)
   estimatedPomodoros: number;
-
-  @ApiPropertyOptional({
-    description: 'Completed pomodoros',
-    minimum: 0,
-    example: 0,
-  })
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  completedPomodoros?: number;
 }

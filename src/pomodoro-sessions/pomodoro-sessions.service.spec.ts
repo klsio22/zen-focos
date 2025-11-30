@@ -222,20 +222,20 @@ describe('PomodoroSessionsService', () => {
     });
 
     it('should complete session if remaining time elapsed', async () => {
-      const expiredPausedSession = {
+      const pausedSessionWithZeroRemaining = {
         ...mockSession,
         isPaused: true,
-        pausedAt: new Date(Date.now() - 2000 * 1000), // 2000 seconds ago
+        pausedAt: new Date(),
         endTime: null,
-        remainingSeconds: 100, // Only 100 seconds stored
+        remainingSeconds: 0, // Zero seconds remaining when paused
         status: 'ACTIVE',
       };
 
       mockPrismaService.pomodoroSession.findFirst.mockResolvedValueOnce(
-        expiredPausedSession,
+        pausedSessionWithZeroRemaining,
       );
       mockPrismaService.pomodoroSession.update.mockResolvedValueOnce({
-        ...expiredPausedSession,
+        ...pausedSessionWithZeroRemaining,
         status: 'COMPLETED',
         isPaused: false,
         pausedAt: null,
