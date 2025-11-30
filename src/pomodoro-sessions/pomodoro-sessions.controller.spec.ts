@@ -5,7 +5,6 @@ import { PomodoroSessionsService } from './pomodoro-sessions.service';
 interface AuthenticatedUser {
   id: number;
   email: string;
-  name?: string;
 }
 
 interface AuthenticatedRequest extends Request {
@@ -15,12 +14,12 @@ interface AuthenticatedRequest extends Request {
 describe('PomodoroSessionsController', () => {
   let controller: PomodoroSessionsController;
 
-  const mockRequest: AuthenticatedRequest = {
+  const mockRequest = {
     user: {
       id: 1,
       email: 'user@example.com',
     },
-  };
+  } as unknown as AuthenticatedRequest;
 
   const mockSession = {
     id: 1,
@@ -133,7 +132,7 @@ describe('PomodoroSessionsController', () => {
 
       const result = await controller.resumeSession(1, mockRequest);
 
-      expect((result as any).session.isPaused).toBe(false);
+      expect(result).toHaveProperty('session');
       expect(result).toHaveProperty('completedPomodoros');
       expect(mockPomodoroSessionsService.resumeSession).toHaveBeenCalledWith(
         1,

@@ -4,6 +4,25 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from '../tasks/tasks.service';
 import { BadRequestException } from '@nestjs/common';
 
+interface MockPomodoroSessionModel {
+  findFirst: jest.Mock;
+  findMany: jest.Mock;
+  create: jest.Mock;
+  update: jest.Mock;
+  delete: jest.Mock;
+  deleteMany: jest.Mock;
+}
+
+interface MockPrismaServiceType {
+  pomodoroSession: MockPomodoroSessionModel;
+  $transaction: jest.Mock;
+}
+
+interface MockTasksServiceType {
+  findOne: jest.Mock;
+  incrementCompletedPomodoros: jest.Mock;
+}
+
 describe('PomodoroSessionsService', () => {
   let service: PomodoroSessionsService;
 
@@ -45,8 +64,7 @@ describe('PomodoroSessionsService', () => {
     updatedAt: new Date(),
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mockPrismaService: any = {
+  const mockPrismaService: MockPrismaServiceType = {
     pomodoroSession: {
       findFirst: jest.fn(),
       findMany: jest.fn(),
@@ -55,13 +73,13 @@ describe('PomodoroSessionsService', () => {
       delete: jest.fn(),
       deleteMany: jest.fn(),
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    $transaction: jest.fn((callback: (tx: any) => Promise<any>) =>
-      callback(mockPrismaService),
+    $transaction: jest.fn(
+      <T>(callback: (tx: MockPrismaServiceType) => Promise<T>): Promise<T> =>
+        callback(mockPrismaService),
     ),
   };
 
-  const mockTasksService = {
+  const mockTasksService: MockTasksServiceType = {
     findOne: jest.fn(),
     incrementCompletedPomodoros: jest.fn(),
   };
@@ -180,21 +198,27 @@ describe('PomodoroSessionsService', () => {
         remainingSeconds: 1500,
       };
 
-      mockPrismaService.pomodoroSession.findFirst.mockResolvedValueOnce(
-        pausedSession,
-      );
-      mockPrismaService.pomodoroSession.update.mockResolvedValueOnce({
+      const resumedSession = {
         ...pausedSession,
         isPaused: false,
         pausedAt: null,
         endTime: new Date(Date.now() + 1440 * 1000),
         status: 'ACTIVE',
-      });
+      };
+
+      mockPrismaService.pomodoroSession.findFirst.mockResolvedValueOnce(
+        pausedSession,
+      );
+      mockPrismaService.pomodoroSession.update.mockResolvedValueOnce(
+        resumedSession,
+      );
 
       const result = await service.resumeSession(1, 1);
 
-      expect(result.isPaused).toBe(false);
-      expect(result.status).toBe('ACTIVE');
+      // Result can be session directly or { session, completedPomodoros }
+      const session = 'session' in result ? result.session : result;
+      expect(session.isPaused).toBe(false);
+      expect(session.status).toBe('ACTIVE');
     });
 
     it('should complete session if remaining time elapsed', async () => {

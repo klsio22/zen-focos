@@ -28,6 +28,9 @@ describe('TasksService', () => {
       update: jest.fn(),
       delete: jest.fn(),
     },
+    pomodoroSession: {
+      deleteMany: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -135,20 +138,20 @@ describe('TasksService', () => {
         completedPomodoros: 0,
       };
 
+      const updatedTask = {
+        ...taskWithProgress,
+        completedPomodoros: 1,
+        status: 'IN_PROGRESS',
+      };
+
       mockPrismaService.task.findFirst.mockResolvedValueOnce(taskWithProgress);
-      mockPrismaService.task.findUnique.mockResolvedValueOnce({
-        ...taskWithProgress,
-        completedPomodoros: 1,
-        status: 'IN_PROGRESS',
-      });
-      mockPrismaService.task.update.mockResolvedValueOnce({
-        ...taskWithProgress,
-        completedPomodoros: 1,
-        status: 'IN_PROGRESS',
-      });
+      mockPrismaService.task.update.mockResolvedValueOnce(updatedTask); // First update (increment)
+      mockPrismaService.task.findUnique.mockResolvedValueOnce(updatedTask);
+      mockPrismaService.task.update.mockResolvedValueOnce(updatedTask); // Second update (status)
 
       const result = await service.incrementCompletedPomodoros(1, 1);
 
+      expect(result).toBeDefined();
       expect(mockPrismaService.task.update).toHaveBeenCalled();
     });
 
@@ -188,11 +191,10 @@ describe('TasksService', () => {
 
       await service.incrementCompletedPomodoros(1, 1);
 
-      const lastCall =
-        mockPrismaService.task.update.mock.calls[
-          mockPrismaService.task.update.mock.calls.length - 1
-        ][0];
-      expect(lastCall.data.status).toBe('COMPLETED');
+      const calls = mockPrismaService.task.update.mock.calls as unknown[][];
+      const lastCall = calls[calls.length - 1];
+      const updateData = lastCall[0] as { data: { status: string } };
+      expect(updateData.data.status).toBe('COMPLETED');
     });
   });
 

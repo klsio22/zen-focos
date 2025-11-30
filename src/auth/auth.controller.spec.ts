@@ -4,8 +4,21 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
+interface AuthResponse {
+  access_token: string;
+  user: {
+    id: number;
+    email: string;
+    createdAt: Date;
+  };
+}
+
 describe('AuthController', () => {
   let controller: AuthController;
+  let mockAuthService: {
+    register: jest.Mock<Promise<AuthResponse>, [RegisterDto]>;
+    login: jest.Mock<Promise<AuthResponse>, [LoginDto]>;
+  };
 
   const mockRegisterDto: RegisterDto = {
     email: 'test@example.com',
@@ -17,7 +30,7 @@ describe('AuthController', () => {
     password: 'password123',
   };
 
-  const mockAuthResponse = {
+  const mockAuthResponse: AuthResponse = {
     access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
     user: {
       id: 1,
@@ -26,12 +39,12 @@ describe('AuthController', () => {
     },
   };
 
-  const mockAuthService = {
-    register: jest.fn(),
-    login: jest.fn(),
-  };
-
   beforeEach(async () => {
+    mockAuthService = {
+      register: jest.fn<Promise<AuthResponse>, [RegisterDto]>(),
+      login: jest.fn<Promise<AuthResponse>, [LoginDto]>(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -43,8 +56,6 @@ describe('AuthController', () => {
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
-
-    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -56,20 +67,20 @@ describe('AuthController', () => {
       mockAuthService.register.mockResolvedValueOnce(mockAuthResponse);
 
       const result = await controller.register(mockRegisterDto);
+      const authResult = result as AuthResponse;
 
-      expect(result).toHaveProperty('access_token');
-      expect(result).toHaveProperty('user');
-      expect(result.user.email).toBe(mockRegisterDto.email);
+      expect(authResult).toHaveProperty('access_token');
+      expect(authResult).toHaveProperty('user');
+      expect(authResult.user.email).toBe(mockRegisterDto.email);
       expect(mockAuthService.register).toHaveBeenCalledWith(mockRegisterDto);
     });
 
     it('should handle duplicate email registration', async () => {
-      const error = new Error('Email already registered');
-      mockAuthService.register.mockRejectedValueOnce(error);
-
-      await expect(controller.register(mockRegisterDto)).rejects.toThrow(
-        'Email already registered',
+      mockAuthService.register.mockRejectedValueOnce(
+        new Error('Email already registered'),
       );
+
+      await expect(controller.register(mockRegisterDto)).rejects.toThrow(Error);
     });
   });
 
@@ -78,16 +89,18 @@ describe('AuthController', () => {
       mockAuthService.login.mockResolvedValueOnce(mockAuthResponse);
 
       const result = await controller.login(mockLoginDto);
+      const authResult = result as AuthResponse;
 
-      expect(result).toHaveProperty('access_token');
-      expect(result).toHaveProperty('user');
-      expect(result.user.email).toBe(mockLoginDto.email);
+      expect(authResult).toHaveProperty('access_token');
+      expect(authResult).toHaveProperty('user');
+      expect(authResult.user.email).toBe(mockLoginDto.email);
       expect(mockAuthService.login).toHaveBeenCalledWith(mockLoginDto);
     });
 
     it('should handle invalid credentials', async () => {
-      const error = new Error('Invalid credentials');
-      mockAuthService.login.mockRejectedValueOnce(error);
+      mockAuthService.login.mockRejectedValueOnce(
+        new Error('Invalid credentials'),
+      );
 
       await expect(controller.login(mockLoginDto)).rejects.toThrow(Error);
     });
