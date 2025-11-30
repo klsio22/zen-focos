@@ -79,10 +79,14 @@ export class TasksService {
       data.completedPomodoros = updateTaskDto.completedPomodoros;
     }
     if (updateTaskDto.status !== undefined) {
-      const validStatuses: string[] = ['PENDING', 'IN_PROGRESS', 'COMPLETED'];
-      const statusValue = updateTaskDto.status;
-      if (validStatuses.includes(statusValue)) {
-        data.status = statusValue as TaskStatus;
+      const status = String(updateTaskDto.status);
+      const validStatuses: readonly string[] = [
+        'PENDING',
+        'IN_PROGRESS',
+        'COMPLETED',
+      ];
+      if (validStatuses.includes(status)) {
+        data.status = status as TaskStatus;
       }
     }
 
