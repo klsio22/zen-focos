@@ -218,8 +218,8 @@ A documentação inclui:
 
 | ID   | Descrição                                 | Status |
 | ---- | ----------------------------------------- | ------ |
-| ID12 | Testes automatizados com Jest             | ⬜      |
-| ID13 | Cobertura de testes para rotas principais | ⬜      |
+| ID12 | Testes automatizados com Jest             | ✅      |
+| ID13 | Cobertura de testes para rotas principais | ✅      |
 
 ### RA4 - Gerar documentação da API e realizar deploy
 
@@ -246,10 +246,10 @@ A documentação inclui:
 | ---------------------- | --------- | ------ | --------- |
 | RA1 - NestJS API       | 7         | 7      | 100%      |
 | RA2 - Persistência     | 4         | 4      | 100%      |
-| RA3 - Testes           | 0         | 2      | 0%        |
+| RA3 - Testes           | 2         | 2      | 100%      |
 | RA4 - Docs & Deploy    | 3         | 5      | 60%       |
 | RA5 - Auth & Segurança | 1         | 4      | 25%       |
-| **TOTAL**              | **15**    | **22** | **68%**   |
+| **TOTAL**              | **17**    | **22** | **77%**   |
 
 ---
 
