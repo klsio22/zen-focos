@@ -197,7 +197,7 @@ sequenceDiagram
     API-->>Usuário: Task criada (201)
 
     Usuário->>API: POST /pomodoro-sessions (start session)
-    API->>Database: Create session
+    API->>Database: Create session caso não exista
     Database-->>API: Session created
     API-->>Usuário: Session started (200)
 

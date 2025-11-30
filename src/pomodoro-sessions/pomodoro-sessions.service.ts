@@ -16,22 +16,32 @@ export class PomodoroSessionsService {
   ) {}
 
   async startSession(taskId: number, userId: number) {
-    // Verify task exists and user owns it
     await this.tasksService.findOne(taskId, userId);
 
-    // Cancel any existing active session for this user
-    await this.cancelActiveSessions(userId);
+    const existing = await this.prisma.pomodoroSession.findFirst({
+      where: { userId, taskId, status: 'ACTIVE', isPaused: false },
+    });
+    if (existing) {
+      throw new BadRequestException(
+        'Já existe uma sessão pomodoro ativa para esta tarefa',
+      );
+    }
 
-    // Create new session
+    const startTime = new Date();
+    const durationMinutes = 25;
+    const remainingSeconds = durationMinutes * 60;
+    const endTime = new Date(startTime.getTime() + remainingSeconds * 1000);
+
     return this.prisma.pomodoroSession.create({
       data: {
         userId,
         taskId,
-        duration: 25, // Fixed 25 minutes
-        startTime: new Date(),
+        duration: durationMinutes,
+        startTime,
+        endTime,
         status: 'ACTIVE',
         isPaused: false,
-        remainingSeconds: null,
+        remainingSeconds,
       },
       include: {
         task: true,
