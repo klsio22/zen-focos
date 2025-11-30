@@ -19,9 +19,13 @@ fi
 
 # Check for uncommitted changes
 if ! git diff-index --quiet HEAD --; then
-    echo "⚠️  Você tem mudanças não commitadas. Commitando automaticamente..."
-    git add .
-    git commit -m "Update for deployment to Render"
+    echo "❌ Você tem mudanças não commitadas!"
+    echo "   Faça commit das alterações antes de fazer deploy:"
+    echo "   git add ."
+    echo "   git commit -m 'Sua mensagem de commit'"
+    echo "   git push"
+    echo "   ./deploy-render.sh"
+    exit 1
 fi
 
 # Push to remote
