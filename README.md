@@ -19,10 +19,12 @@ ZenFocos é uma API para gerenciamento de produtividade utilizando a técnica Po
 
 ## 🔗 Links
 
-| Recurso                  | URL                                                          |
-| ------------------------ | ------------------------------------------------------------ |
-| **Repositório**          | [github.com/klsio22/zen-focos](https://github.com/klsio22/zen-focos) |
-| **Swagger Docs (local)** | http://localhost:3000/api/docs                               |
+| Recurso                      | URL                                                          |
+| ---------------------------- | ------------------------------------------------------------ |
+| **Repositório**              | [github.com/klsio22/zen-focos](https://github.com/klsio22/zen-focos) |
+| **API em Produção (Render)** | https://zen-focos.onrender.com                              |
+| **Swagger Docs (local)**     | http://localhost:3000/api/docs                               |
+| **Swagger Docs (produção)**  | https://zen-focos.onrender.com/api/docs                     |
 
 ---
 
@@ -174,9 +176,10 @@ erDiagram
 
 ## 📚 Documentação Swagger
 
-A documentação interativa da API está disponível em:
+A documentação interativa da API está disponível em ambos os ambientes:
 
-**URL**: https://zen-focos.onrender.com/api/docs
+**Desenvolvimento (local)**: http://localhost:3000/api/docs
+**Produção (Render)**: https://zen-focos.onrender.com/api/docs
 
 A documentação inclui:
 
@@ -243,9 +246,25 @@ A documentação inclui:
 | RA1 - NestJS API       | 7         | 7      | 100%      |
 | RA2 - Persistência     | 4         | 4      | 100%      |
 | RA3 - Testes           | 2         | 2      | 100%      |
-| RA4 - Docs & Deploy    | 3         | 5      | 60%       |
+| RA4 - Docs & Deploy    | 5         | 5      | 100%      |
 | RA5 - Auth & Segurança | 4         | 4      | 100%      |
-| **TOTAL**              | **20**    | **22** | **91%**   |
+| **TOTAL**              | **22**    | **22** | **100%**  |
+
+---
+
+## 🚀 Ambientes
+
+### Desenvolvimento (Local)
+- **URL**: http://localhost:3000
+- **Banco de dados**: MySQL via Docker (localhost:3306)
+- **Comando**: `npm run start:dev`
+- **Variáveis**: `.env` com DATABASE_URL local
+
+### Produção (Render)
+- **URL**: https://zen-focos.onrender.com
+- **Banco de dados**: MySQL no Clever Cloud
+- **Status**: ✅ Funcional
+- **Variáveis**: Configuradas no dashboard do Render
 
 ---
 
@@ -265,7 +284,7 @@ npm run prisma:migrate   # Rodar migrations
 npm run prisma:studio    # Abrir Prisma Studio
 
 # Docker
-npm run docker:up      # Subir MySQL
+npm run docker:up      # Subir MySQL localmente
 npm run docker:down    # Parar containers
 
 # Qualidade
@@ -273,6 +292,68 @@ npm run lint           # ESLint
 npm run format         # Prettier
 npm run test           # Rodar testes
 ```
+
+---
+
+## 🔧 Configuração de Ambientes
+
+### Desenvolvimento Local
+
+1. Clone e instale:
+```bash
+git clone https://github.com/klsio22/zen-focos.git
+cd zen-focos
+npm install
+```
+
+2. Configure `.env` com banco local:
+```env
+DATABASE_URL="mysql://root:root@localhost:3306/zenfocos_db"
+NODE_ENV="development"
+PORT=3000
+```
+
+3. Suba o Docker e execute:
+```bash
+npm run docker:up
+npx prisma migrate dev
+npm run start:dev
+```
+
+### Produção no Render + Clever Cloud
+
+A aplicação está **deployada com sucesso** no Render:
+
+**Stack:**
+- **Render**: Hospedagem da API (Node.js)
+- **Clever Cloud**: Banco MySQL em produção
+- **Separação de ambientes**: Variáveis de ambiente diferentes
+
+**Variáveis no Render Dashboard:**
+- `DATABASE_URL` - Aponta para MySQL do Clever Cloud (não alterado em `.env` local)
+- `JWT_SECRET` - Chave de criptografia
+- `NODE_ENV=production`
+- `ALLOWED_ORIGINS` - URLs permitidas
+
+**Build & Deploy:**
+```bash
+# Build Command (Render)
+npm install && npx prisma generate && npx prisma migrate deploy && npm run build
+
+# Start Command (Render)
+npm run start
+```
+
+---
+
+## ✅ Status do Projeto
+
+- ✅ **Desenvolvimento**: Funcionando localmente com Docker MySQL
+- ✅ **Produção**: Deployed no Render com banco Clever Cloud
+- ✅ **API**: Acessível em https://zen-focos.onrender.com
+- ✅ **Banco de Dados**: Separado por ambiente (local vs Clever Cloud)
+- ✅ **Testes**: 75 testes passando
+- ✅ **Documentação**: Swagger disponível em ambos os ambientes
 
 ---
 
