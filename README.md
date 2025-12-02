@@ -176,7 +176,7 @@ erDiagram
 
 A documentação interativa da API está disponível em:
 
-**URL**: http://localhost:3000/api/docs
+**URL**: https://zen-focos.onrender.com/api/docs
 
 A documentação inclui:
 
@@ -222,8 +222,8 @@ A documentação inclui:
 | ID   | Descrição                                   | Status |
 | ---- | ------------------------------------------- | ------ |
 | ID14 | Swagger integrado com documentação completa | ✅      |
-| ID15 | Deploy em plataforma de hospedagem na nuvem | ⏳      |
-| ID16 | API funcional em produção                   | ⏳      |
+| ID15 | Deploy em plataforma de hospedagem na nuvem | ✅      |
+| ID16 | API funcional em produção                   | ✅      |
 | ID17 | Variáveis de ambiente com ConfigModule      | ✅      |
 | ID18 | Versionamento de API (v1)                   | ✅      |
 
