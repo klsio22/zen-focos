@@ -9,8 +9,8 @@ async function bootstrap() {
 
   // Enable CORS with configuration
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
-    'http://localhost:3000',
-    'http://localhost:3001',
+    'http://localhost:3000/api/docs',
+    'http://localhost:3001/api/docs',
   ];
   app.enableCors({
     origin: allowedOrigins,
@@ -44,7 +44,6 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  logger.log(`🚀 Application is running on: http://localhost:${port}`);
   logger.log(`📚 Swagger documentation: http://localhost:${port}/api/docs`);
   logger.log(`CORS enabled for origins: ${allowedOrigins.join(', ')}`);
 }
